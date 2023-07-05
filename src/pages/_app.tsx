@@ -6,8 +6,6 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import { Toaster } from "react-hot-toast";
 
-const clerkFrontendAPI = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API;
-
 const MyApp: AppType = ({ Component, pageProps }) => {
 
   const router = useRouter();
@@ -23,7 +21,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       navigate={(to) => router.push(to)}
       >
       <Toaster position="top-right" />
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </ClerkProvider>
     </>
   )
