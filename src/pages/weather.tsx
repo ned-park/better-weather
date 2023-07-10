@@ -7,7 +7,8 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Filler,
+  Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import Layout from "~/components/layout/Layout";
@@ -52,10 +53,11 @@ export const options = {
   plugins: {
     legend: {
       position: "top" as const,
+
     },
     title: {
       display: true,
-      text: "Hourly temperatures C",
+      text: "Hourly temperatures",
     },
   },
 }
@@ -73,7 +75,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Filler,
+  Legend,
 );
 
 
@@ -82,6 +85,7 @@ const Weather = () => {
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [day, setDay] = useState(0);
 
   useEffect(() => {
     // fetch to backend to check if location has coordinates in DB
@@ -125,12 +129,40 @@ const Weather = () => {
       {isLoaded && forecast && (
         <>
           <ul className="text-black">
-            {Object.entries(forecast).map(([key, value], i) => typeof value == 'object'? <li key={i}>{key}: Object</li> : <li key={i}>{key}: {value}</li>)}
+            {Object.entries(forecast).map(([key, value], i) => typeof value == 'object' ? <li key={i}>{key}: Object</li> : <li key={i}>{key}: {value}</li>)}
           </ul>
-          <Line options={options} data={{labels: forecast.hourly.time, datasets:[{data: forecast.hourly.temperature_2m.map(Number)}]}} />
+          <label htmlFor="day">Select date:
+            <select 
+              name="day" 
+              id="day"
+              value={day}
+              onChange={e => setDay(Number(e.target.value))}
+            >
+              <option value={0}>0</option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+              <option value={6}>6</option>
+            </select>
+          </label>
+          <Line
+            options={options}
+            data={{
+              labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+              datasets: [{
+                fill: true,
+                label: 'Temperature °C',
+                data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              }],
+            }}
+            className="p-16"
+          />
         </>
       )}
-      <h4>Testing whether this shows up</h4>
     </Layout>
   )
 };
