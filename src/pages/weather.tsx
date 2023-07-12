@@ -150,11 +150,11 @@ function Weather() {
     if (!forecast) return;
     const dayData = new Array(24);
     for (let i = 0; i < 24; i++) {
-      const hour: Array<number | undefined> = [];
+      const hour: Array<number | string | undefined> = [];
       Object.entries(forecast.hourly)
         .forEach(([_, value]) => {
           if (!Array.isArray(value) || value[24 * day + i] === undefined) throw new Error("Your array isn't what you think");
-          hour.push(value[24 * day + i] as number)
+          hour.push(value[24 * day + i] as number | string)
         });
       dayData.push(hour);
     }
@@ -173,14 +173,18 @@ function Weather() {
       {isLoaded && forecast && (
         <>
           <table
-            className="table-auto text-center "
+            className="table-auto text-center"
           >
             <thead>
-              <tr>{Object.keys(forecast.hourly).map((heading: string) => <th key={uniqId.default()}>{(humanReadable.has(heading) ? humanReadable.get(heading) : heading)}</th>)}</tr>
+              <tr className="bg-slate-400">{Object.keys(forecast.hourly).map((heading: string) => <th key={uniqId.default()} className="first-of-type:pl-4 pr-4">{(humanReadable.has(heading) ? humanReadable.get(heading) : heading)}</th>)}</tr>
             </thead>
             <tbody>
               {tableData?.map((row) => {
-                return <tr key={uniqId.default()}>{row.map((value) => <td key={uniqId.default()}>{value}</td>)}</tr>
+                return (
+                  <tr className="even:bg-slate-400 odd:bg-slate-200" key={uniqId.default()}>
+                    {row.map((value, i) => <td key={uniqId.default()}>{i === 0? String(value).split("T")[1] : value}</td>)}
+                  </tr>
+                )
               })
               }
             </tbody>
