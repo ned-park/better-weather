@@ -11,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import * as uniqId from 'uniqid';
 import Layout from "~/components/layout/Layout";
 
 
@@ -23,14 +24,14 @@ interface Hourly {
   precipitation_probability: Array<number>;
   precipitation: Array<number>;
   weathercode: Array<number>;
-  dewpoint_2m: Array<number>;
+  relativehumidity_2m: Array<number>;
   windspeed_10m: Array<number>;
 }
 
 interface HourlyUnits {
   "time": string;
   "temperature_2m": string;
-  "dewpoint_2m": string;
+  "relativehumidity_2m": string;
   "precipitation_probability": string;
   "precipitation": string;
   "weathercode": string;
@@ -98,7 +99,7 @@ ChartJS.register(
 const humanReadable = new Map<string, string>();
 humanReadable.set("time", "Time");
 humanReadable.set("temperature_2m", "Temperature");
-humanReadable.set("dewpoint_2m", "DewPoint");
+humanReadable.set("relativehumidity_2m", "Humidity");
 humanReadable.set("precipitation_probability", "PoP");
 humanReadable.set("precipitation", "Precipitation");
 humanReadable.set("weathercode", "Weather code");
@@ -127,7 +128,7 @@ function Weather() {
     }
 
     const getForecastData = async () => {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=temperature_2m,dewpoint_2m,precipitation_probability,precipitation,weathercode,windspeed_10m`)
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,weathercode,windspeed_10m`)
       // const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&hourly=temperature_2m&timezone=auto&`);
       if (res.ok) {
         const data: Forecast = await res.json() as Forecast;
@@ -147,13 +148,9 @@ function Weather() {
 
   const getTableData = () => {
     if (!forecast) return;
-    const dayData = new Array(25);
-    for (let i = 0; i < dayData.length; i++)
-    dayData[0] = (Object.keys(forecast.hourly));
-    if (!Array.isArray(dayData[0])) throw new Error("Your array is not an array")
-    dayData[0] = dayData[0].map((heading: string) => (humanReadable.has(heading)? humanReadable.get(heading) : heading) as string);
+    const dayData = new Array(24);
     for (let i = 0; i < 24; i++) {
-      const hour: Array<number | string | undefined> = [];
+      const hour: Array<number | undefined> = [];
       Object.entries(forecast.hourly)
         .forEach(([_, value]) => {
           if (!Array.isArray(value) || value[24 * day + i] === undefined) throw new Error("Your array isn't what you think");
@@ -162,10 +159,11 @@ function Weather() {
       dayData.push(hour);
     }
 
-    return dayData as Array<number[] | string[]>;
+    return dayData as Array<number[]>;
   }
 
   const tableData = getTableData();
+
   return (
     <Layout>
       <input
@@ -174,18 +172,22 @@ function Weather() {
       />
       {isLoaded && forecast && (
         <>
-          <table width="100%">
-            {tableData?.map((row, i) => {
-              if (i === 0) {
-                return <tr key={i}>{row.map((heading,j) => <th key={`${i}:${j}`}>{heading}</th>)}</tr>
+          <table
+            className="table-auto text-center "
+          >
+            <thead>
+              <tr>{Object.keys(forecast.hourly).map((heading: string) => <th key={uniqId.default()}>{(humanReadable.has(heading) ? humanReadable.get(heading) : heading)}</th>)}</tr>
+            </thead>
+            <tbody>
+              {tableData?.map((row) => {
+                return <tr key={uniqId.default()}>{row.map((value) => <td key={uniqId.default()}>{value}</td>)}</tr>
+              })
               }
-              return <tr key={i}>{row.map((value,j) => <td key={`${i}:${j}`}>{value}</td>)}</tr>
-            })
-            }
+            </tbody>
           </table>
 
           <ul className="text-black">
-            {Object.entries(forecast).map(([key, value], i) => typeof value == 'object' ? <li key={i}>{key}: Object</li> : <li key={i}>{key}: {value}</li>)}
+            {Object.entries(forecast).map(([key, value]) => typeof value == 'object' ? <li key={uniqId.default()}>{key}: Object</li> : <li key={uniqId.default()}>{key}: {value}</li>)}
           </ul>
           <label htmlFor="day">Select date:
             <select
