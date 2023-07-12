@@ -105,6 +105,37 @@ humanReadable.set("precipitation", "Precipitation");
 humanReadable.set("weathercode", "Weather code");
 humanReadable.set("windspeed_10m", "Windspeed");
 
+const weatherIcons = new Map<number, string>();
+weatherIcons.set(0, "Clear sky");
+weatherIcons.set(1, "Mainly clear");
+weatherIcons.set(2,	"Partly cloudy");
+weatherIcons.set(3, "Overcast");
+weatherIcons.set(45, "Fog");
+weatherIcons.set(48, "Depositing rime fog");
+weatherIcons.set(51, "Drizzle: Light");
+weatherIcons.set(53, "Drizzle: moderate");
+weatherIcons.set(55, "Drizzle: dense");
+weatherIcons.set(56, "Freezing Drizzle: Light");
+weatherIcons.set(57, "Freezing Drizzle: dense intensity");
+weatherIcons.set(61, "Rain: Slight");
+weatherIcons.set(63, "Rain: moderate");
+weatherIcons.set(65, "Rain: heavy");
+weatherIcons.set(66, "Freezing Rain: Light");
+weatherIcons.set(67, "Freezing Rain: heavy");
+weatherIcons.set(71, "Snow fall: Slight");
+weatherIcons.set(73, "Snow fall: moderate");
+weatherIcons.set(75, "Snow fall: heavy intensity");
+weatherIcons.set(77, "Snow grains");
+weatherIcons.set(80, "Rain showers: Slight");
+weatherIcons.set(81, "Rain showers: moderate");
+weatherIcons.set(82, "Rain showers: violent");
+weatherIcons.set(85, "Snow showers slight");
+weatherIcons.set(86, "Snow showers heavy");
+weatherIcons.set(95, "Thunderstorm: Slight or moderate");
+weatherIcons.set(96, "Thunderstorm with slight and heavy hail");
+weatherIcons.set(99, "Thunderstorm with slight and heavy hail");
+
+
 function Weather() {
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
@@ -152,9 +183,9 @@ function Weather() {
     for (let i = 0; i < 24; i++) {
       const hour: Array<number | string | undefined> = [];
       Object.entries(forecast.hourly)
-        .forEach(([_, value]) => {
+        .forEach(([key, value]) => {
           if (!Array.isArray(value) || value[24 * day + i] === undefined) throw new Error("Your array isn't what you think");
-          hour.push(value[24 * day + i] as number | string)
+          hour.push(key === "weathercode" && weatherIcons.has(Number(value[24 * day + i]))? weatherIcons.get(Number(value[24 * day + i])) : value[24 * day + i] as number | string)
         });
       dayData.push(hour);
     }
