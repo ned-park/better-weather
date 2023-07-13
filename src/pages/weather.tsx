@@ -13,6 +13,7 @@ import {
 import { Line } from "react-chartjs-2";
 import * as uniqId from 'uniqid';
 import Layout from "~/components/layout/Layout";
+import WeatherTable from "~/components/Table";
 
 
 const LAT = process.env.NEXT_PUBLIC_TEST_LAT || "";
@@ -96,27 +97,18 @@ ChartJS.register(
   Legend,
 );
 
-const humanReadable = new Map<string, string>();
-humanReadable.set("time", "Time");
-humanReadable.set("temperature_2m", "Temperature");
-humanReadable.set("relativehumidity_2m", "Humidity");
-humanReadable.set("precipitation_probability", "PoP");
-humanReadable.set("precipitation", "Precipitation");
-humanReadable.set("weathercode", "Weather code");
-humanReadable.set("windspeed_10m", "Windspeed");
-
 const weatherIcons = new Map<number, string>();
 weatherIcons.set(0, "Clear sky");
 weatherIcons.set(1, "Mainly clear");
-weatherIcons.set(2,	"Partly cloudy");
+weatherIcons.set(2, "Partly cloudy");
 weatherIcons.set(3, "Overcast");
 weatherIcons.set(45, "Fog");
 weatherIcons.set(48, "Depositing rime fog");
 weatherIcons.set(51, "Drizzle: Light");
-weatherIcons.set(53, "Drizzle: moderate");
-weatherIcons.set(55, "Drizzle: dense");
+weatherIcons.set(53, "Drizzle: Moderate");
+weatherIcons.set(55, "Drizzle: Dense");
 weatherIcons.set(56, "Freezing Drizzle: Light");
-weatherIcons.set(57, "Freezing Drizzle: dense intensity");
+weatherIcons.set(57, "Freezing Drizzle: Dense");
 weatherIcons.set(61, "Rain: Slight");
 weatherIcons.set(63, "Rain: moderate");
 weatherIcons.set(65, "Rain: heavy");
@@ -127,9 +119,9 @@ weatherIcons.set(73, "Snow fall: moderate");
 weatherIcons.set(75, "Snow fall: heavy intensity");
 weatherIcons.set(77, "Snow grains");
 weatherIcons.set(80, "Rain showers: Slight");
-weatherIcons.set(81, "Rain showers: moderate");
-weatherIcons.set(82, "Rain showers: violent");
-weatherIcons.set(85, "Snow showers slight");
+weatherIcons.set(81, "Rain showers: Moderate");
+weatherIcons.set(82, "Rain showers: Violent");
+weatherIcons.set(85, "Snow showers Slight");
 weatherIcons.set(86, "Snow showers heavy");
 weatherIcons.set(95, "Thunderstorm: Slight or moderate");
 weatherIcons.set(96, "Thunderstorm with slight and heavy hail");
@@ -137,7 +129,7 @@ weatherIcons.set(99, "Thunderstorm with slight and heavy hail");
 
 
 function Weather() {
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState('location');
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -159,7 +151,7 @@ function Weather() {
     }
 
     const getForecastData = async () => {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,weathercode,windspeed_10m`)
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=weathercode,temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,windspeed_10m`)
       // const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&hourly=temperature_2m&timezone=auto&`);
       if (res.ok) {
         const data: Forecast = await res.json() as Forecast;
@@ -178,19 +170,19 @@ function Weather() {
   }, [latLong]);
 
   const getTableData = () => {
-    if (!forecast) return;
+    if (!forecast) return [[0]];
     const dayData = new Array(24);
     for (let i = 0; i < 24; i++) {
       const hour: Array<number | string | undefined> = [];
       Object.entries(forecast.hourly)
         .forEach(([key, value]) => {
           if (!Array.isArray(value) || value[24 * day + i] === undefined) throw new Error("Your array isn't what you think");
-          hour.push(key === "weathercode" && weatherIcons.has(Number(value[24 * day + i]))? weatherIcons.get(Number(value[24 * day + i])) : value[24 * day + i] as number | string)
+          hour.push(key === "weathercode" && weatherIcons.has(Number(value[24 * day + i])) ? weatherIcons.get(Number(value[24 * day + i])) : value[24 * day + i] as number | string)
         });
       dayData.push(hour);
     }
 
-    return dayData as Array<number[]>;
+    return dayData as Array<number[] | string[]>;
   }
 
   const tableData = getTableData();
@@ -203,80 +195,67 @@ function Weather() {
       />
       {isLoaded && forecast && (
         <>
-          <table
-            className="table-auto text-center"
-          >
-            <thead>
-              <tr className="bg-slate-400">{Object.keys(forecast.hourly).map((heading: string) => <th key={uniqId.default()} className="first-of-type:pl-4 pr-4">{(humanReadable.has(heading) ? humanReadable.get(heading) : heading)}</th>)}</tr>
-            </thead>
-            <tbody>
-              {tableData?.map((row) => {
-                return (
-                  <tr className="even:bg-slate-400 odd:bg-slate-200" key={uniqId.default()}>
-                    {row.map((value, i) => <td key={uniqId.default()}>{i === 0? String(value).split("T")[1] : value}</td>)}
-                  </tr>
-                )
-              })
-              }
-            </tbody>
-          </table>
+          <div className="pb-4">
+            <label htmlFor="day">Select date:
+              <select
+                name="day"
+                id="day"
+                value={day}
+                onChange={e => setDay(Number(e.target.value))}
+                className="ml-4 p-2 rounded"
+              >
+                {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
+              </select>
+            </label>
+          </div>
 
-          <ul className="text-black">
-            {Object.entries(forecast).map(([key, value]) => typeof value == 'object' ? <li key={uniqId.default()}>{key}: Object</li> : <li key={uniqId.default()}>{key}: {value}</li>)}
-          </ul>
-          <label htmlFor="day">Select date:
-            <select
-              name="day"
-              id="day"
-              value={day}
-              onChange={e => setDay(Number(e.target.value))}
-            >
-              <option value={0}>0</option>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-              <option value={5}>5</option>
-              <option value={6}>6</option>
-            </select>
-          </label>
-          <Line
-            options={options}
-            data={{
-              labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-              datasets: [{
-                fill: true,
-                label: 'Hourly Temperature °C',
-                data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-              }],
-            }}
-            className="p-16"
-          />
-          <Line
-            options={{
-              ...options,
-              scales: {
-                y: {
-                  min: 0,
-                  max: 100,
-                }
-              }
-            }}
-            data={{
-              labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-              datasets: [{
-                fill: true,
-                label: 'Hourly Percent of Precipitation',
-                data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-              }],
-            }}
-            className="p-16"
-          />
 
+          <section className="w-full grid md:grid-cols-2">
+            <section className="border-2 border-black">
+              <WeatherTable
+                tableData={tableData}
+                tableHeaders={Object.keys(forecast.hourly)}
+                tableUnits={Object.values(forecast.hourly_units)}
+                location={location}
+              />
+            </section>
+            <section className="grid grid-cols-2 grid-rows-2 border-2 border-red">
+              {/* <Line
+                options={options}
+                data={{
+                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                  datasets: [{
+                    fill: true,
+                    label: 'Hourly Temperature °C',
+                    data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                  }],
+                }}
+              />
+              <Line
+                options={{
+                  ...options,
+                  scales: {
+                    y: {
+                      min: 0,
+                      max: 100,
+                    }
+                  }
+                }}
+                data={{
+                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                  datasets: [{
+                    fill: true,
+                    label: 'Hourly Percent of Precipitation',
+                    data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                  }],
+                }}
+              /> */}
+            </section>
+          </section>
         </>
       )}
 
