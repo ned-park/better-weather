@@ -29,7 +29,7 @@ function WeatherTable({
 
   return (
     <table
-      className="w-full table-auto text-center text-tableclamp border-2 border-b-0 border-grey"
+      className="w-full table-auto text-center text-tableclamp border-2 border-b-0 border-grey rounded"
     >
       <thead  className="border-b-2 border-grey">
         <tr><th colSpan={100}>Hourly Weather Forecast for {location}</th></tr>
