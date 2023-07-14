@@ -206,8 +206,8 @@ function Weather() {
           </div>
 
 
-          <section className="w-full grid md:grid-cols-2 gap-4">
-            <section className="border-2 border-black">
+          <section className="w-full grid lg:grid-cols-2 gap-4 mb-8">
+            <section>
               <WeatherTable
                 tableData={tableData}
                 tableHeaders={Object.keys(forecast.hourly)}
@@ -264,8 +264,8 @@ function Weather() {
                     fill: true,
                     label: 'Hourly Percent of Precipitation',
                     data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgb(0, 190, 255)',
+                    backgroundColor: 'rgba(0, 190, 255, 0.5)',
                   }],
                 }}
               />
@@ -278,26 +278,9 @@ function Weather() {
                     ...options.plugins,
                     title: {
                       display: true,
-                      text: "Temperature °C",
+                      text: "Relative Humidity",
                     },
                   },
-                }}
-                data={{
-                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                  datasets: [{
-                    fill: true,
-                    label: 'Hourly Temperature °C',
-                    data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                  }],
-                }}
-              />
-              </section>
-              <section className="bg-slate-400 w-full"></section>
-              {/* <Line
-                options={{
-                  ...options,
                   scales: {
                     y: {
                       min: 0,
@@ -309,13 +292,38 @@ function Weather() {
                   labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
                   datasets: [{
                     fill: true,
-                    label: 'Hourly Percent of Precipitation',
-                    data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    label: 'Relative Humidity (%)',
+                    data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(10, 220, 132)',
+                    backgroundColor: 'rgba(10, 220, 132, 0.5)',
                   }],
                 }}
-              /> */}
+              />
+              </section>
+              <section>
+              <Line
+                options={{
+                  ...options, 
+                  plugins: {
+                    ...options.plugins,
+                    title: {
+                      display: true,
+                      text: "Wind Speed",
+                    },
+                  },
+                }}
+                data={{
+                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                  datasets: [{
+                    fill: true,
+                    label: 'Wind Speed (km/h)',
+                    data: forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(99, 132, 220)',
+                    backgroundColor: 'rgba(99, 132, 220, 0.5)',
+                  }],
+                }}
+              />
+              </section>
             </section>
           </section>
         </>
