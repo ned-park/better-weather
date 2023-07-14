@@ -13,7 +13,7 @@ import {
 import { Line } from "react-chartjs-2";
 import * as uniqId from 'uniqid';
 import Layout from "~/components/layout/Layout";
-import WeatherTable from "~/components/Table";
+import WeatherTable from "~/components/WeatherTable";
 
 
 const LAT = process.env.NEXT_PUBLIC_TEST_LAT || "";
@@ -67,15 +67,11 @@ interface LatLong {
 }
 
 export const options = {
-  responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: "top" as const,
 
-    },
-    title: {
-      display: true,
-      text: "Hourly temperatures",
     },
   },
 }
@@ -98,34 +94,34 @@ ChartJS.register(
 );
 
 const weatherIcons = new Map<number, string>();
-weatherIcons.set(0, "Clear sky");
-weatherIcons.set(1, "Mainly clear");
-weatherIcons.set(2, "Partly cloudy");
-weatherIcons.set(3, "Overcast");
-weatherIcons.set(45, "Fog");
-weatherIcons.set(48, "Depositing rime fog");
-weatherIcons.set(51, "Drizzle: Light");
-weatherIcons.set(53, "Drizzle: Moderate");
-weatherIcons.set(55, "Drizzle: Dense");
-weatherIcons.set(56, "Freezing Drizzle: Light");
-weatherIcons.set(57, "Freezing Drizzle: Dense");
-weatherIcons.set(61, "Rain: Slight");
-weatherIcons.set(63, "Rain: moderate");
-weatherIcons.set(65, "Rain: heavy");
-weatherIcons.set(66, "Freezing Rain: Light");
-weatherIcons.set(67, "Freezing Rain: heavy");
-weatherIcons.set(71, "Snow fall: Slight");
-weatherIcons.set(73, "Snow fall: moderate");
-weatherIcons.set(75, "Snow fall: heavy intensity");
-weatherIcons.set(77, "Snow grains");
-weatherIcons.set(80, "Rain showers: Slight");
-weatherIcons.set(81, "Rain showers: Moderate");
-weatherIcons.set(82, "Rain showers: Violent");
-weatherIcons.set(85, "Snow showers Slight");
-weatherIcons.set(86, "Snow showers heavy");
-weatherIcons.set(95, "Thunderstorm: Slight or moderate");
-weatherIcons.set(96, "Thunderstorm with slight and heavy hail");
-weatherIcons.set(99, "Thunderstorm with slight and heavy hail");
+weatherIcons.set(0, "☀️");
+weatherIcons.set(1, "🌤️");
+weatherIcons.set(2, "🌥️");
+weatherIcons.set(3, "☁️");
+weatherIcons.set(45, "🌫️");
+weatherIcons.set(48, "❄️");
+weatherIcons.set(51, "☁️🌧️☁️");
+weatherIcons.set(53, "🌧️☁️");
+weatherIcons.set(55, "🌧️");
+weatherIcons.set(56, "❄️");
+weatherIcons.set(57, "❄️❄️");
+weatherIcons.set(61, "☁️🌧️☁️");
+weatherIcons.set(63, "🌧️☁️");
+weatherIcons.set(65, "🌧️");
+weatherIcons.set(66, "❄️🌧️");
+weatherIcons.set(67, "🌧️❄️🌧️");
+weatherIcons.set(71, "🌨️");
+weatherIcons.set(73, "🌨️🌨️");
+weatherIcons.set(75, "🌨️🌨️🌨️");
+weatherIcons.set(77, "❄️");
+weatherIcons.set(80, "🌧️");
+weatherIcons.set(81, "🌧️🌧️");
+weatherIcons.set(82, "🌧️🌧️🌧️");
+weatherIcons.set(85, "🌨️");
+weatherIcons.set(86, "🌨️🌨️");
+weatherIcons.set(95, "⛈️");
+weatherIcons.set(96, "⛈️");
+weatherIcons.set(99, "⛈️");
 
 
 function Weather() {
@@ -210,7 +206,7 @@ function Weather() {
           </div>
 
 
-          <section className="w-full grid md:grid-cols-2">
+          <section className="w-full grid md:grid-cols-2 gap-4">
             <section className="border-2 border-black">
               <WeatherTable
                 tableData={tableData}
@@ -220,8 +216,18 @@ function Weather() {
               />
             </section>
             <section className="grid grid-cols-2 grid-rows-2 border-2 border-red">
-              {/* <Line
-                options={options}
+              <section>
+              <Line
+                options={{
+                  ...options, 
+                  plugins: {
+                    ...options.plugins,
+                    title: {
+                      display: true,
+                      text: "Temperature °C",
+                    },
+                  },
+                }}
                 data={{
                   labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
                   datasets: [{
@@ -233,7 +239,63 @@ function Weather() {
                   }],
                 }}
               />
+              </section>
+              <section>
               <Line
+                options={{
+                  ...options,
+                  plugins: {
+                    ...options.plugins,
+                    title: {
+                      display: true,
+                      text: "Precipitation Probability",
+                    },
+                  },
+                  scales: {
+                    y: {
+                      min: 0,
+                      max: 100,
+                    }
+                  }
+                }}
+                data={{
+                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                  datasets: [{
+                    fill: true,
+                    label: 'Hourly Percent of Precipitation',
+                    data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                  }],
+                }}
+              />
+              </section>
+              <section>
+              <Line
+                options={{
+                  ...options, 
+                  plugins: {
+                    ...options.plugins,
+                    title: {
+                      display: true,
+                      text: "Temperature °C",
+                    },
+                  },
+                }}
+                data={{
+                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                  datasets: [{
+                    fill: true,
+                    label: 'Hourly Temperature °C',
+                    data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                  }],
+                }}
+              />
+              </section>
+              <section className="bg-slate-400 w-full"></section>
+              {/* <Line
                 options={{
                   ...options,
                   scales: {
