@@ -6,11 +6,7 @@ type LayoutOwnProps = {
   handleShowPreviousSearch?: boolean;
 };
 
-const Layout: React.FC<PropsWithChildren & LayoutOwnProps> = ({
-  children,
-}) => {
-
-
+function Layout({children} : {children: React.FC<PropsWithChildren & LayoutOwnProps>}) {
 
   return (
     <main className="min-h-screen">
