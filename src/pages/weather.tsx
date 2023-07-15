@@ -12,12 +12,41 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import * as uniqId from 'uniqid';
+import type { MouseEvent } from 'react';
+
 import Layout from "~/components/layout/Layout";
+import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
 
 
 const LAT = process.env.NEXT_PUBLIC_TEST_LAT || "";
 const LONG = process.env.NEXT_PUBLIC_TEST_LONG || "";
+
+export interface Place {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  elevation: number;
+  feature_code: string;
+  country_code: string;
+  admin1_id: number;
+  timezone: string;
+  population?: number | null;
+  country_id: number;
+  country: string;
+  admin1: string;
+  admin2_id?: number | null;
+  postcodes?: (string)[] | null;
+  admin2?: string | null;
+  admin3_id?: number | null;
+  admin3?: string | null;
+}
+
+interface Location {
+  results: (Place)[];
+  generationtime_ms: number;
+}
 
 interface Hourly {
   time: Array<string>;
@@ -61,7 +90,7 @@ interface Forecast {
   utc_offset_seconds: number;
 }
 
-interface LatLong {
+export interface LatLong {
   latitude: string;
   longitude: string;
 }
@@ -129,26 +158,24 @@ function Weather() {
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showModal, setShowModal] = useState(true);
+  const [places, setPlaces] = useState<Place[]>();
   const [day, setDay] = useState(0);
 
+  const getLatLong = async () => {
+    return /*const res =*/ await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${location}&count=10&language=en&format=json`);
+    // if (res.ok) {
+      // const data = await res.json();
+      // const results = data.results;
+      // console.log(data);
+      // if (!results || !results.longitude || !results.latitude) return;
+      // setLatLong({longitude: data.longitude, latitude: data.latitude} as LatLong);
+    // }
+  }
+
   useEffect(() => {
-    // fetch to backend to check if location has coordinates in DB
-    // if not send request to position API
-    // save response to avoid more queries
-    // 
-
-    const getLatLong = async () => {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LONG}&hourly=temperature_2m&timezone=auto&`);
-      if (res.ok) {
-        const data: LatLong = await res.json() as LatLong;
-        if (!data) return;
-        setLatLong(data);
-      }
-    }
-
-    const getForecastData = async () => {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=weathercode,temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,windspeed_10m`)
-      // const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&hourly=temperature_2m&timezone=auto&`);
+      const getForecastData = async () => {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=weathercode,temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,windspeed_10m`);
       if (res.ok) {
         const data: Forecast = await res.json() as Forecast;
         if (!data) return;
@@ -183,30 +210,69 @@ function Weather() {
 
   const tableData = getTableData();
 
+  const changeLocation = async (event: MouseEvent) => {
+    event.preventDefault();
+    console.log("clicked");
+    const res = await getLatLong();
+    if (res.ok) {
+      const data = await res.json() as Location;
+      const results = data.results;
+      if (results.length > 1) {
+        setShowModal(true);
+        setPlaces(results);
+      } else if (!results[0]) {
+        throw new Error("Invalid name");
+        console.log("no results");
+      } else {
+        setLatLong({
+          latitude: String(results[0].latitude),
+          longitude: String(results[0].longitude),
+        })
+      }
+      // const results = data.results;
+      console.log(data);
+    }
+  }
+
   return (
     <Layout>
-      <input
-        onChange={(e) => setLocation(e.target.value)}
-        value={location}
-      />
+      <section className="flex justify-between items-center px-1 py-4">
+        <div className="flex gap-4">
+          <input
+            onChange={(e) => setLocation(e.target.value)}
+            value={location}
+            className="border-2 border-grey rounded p-2"
+          />
+          <button
+            onClick={(e) => { void changeLocation(e) }}
+            className="bg-sky-500 rounded p-2  px-4"
+          >
+            Submit
+          </button>
+        </div>
+        {showModal && places && <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} />}
+        {isLoaded && forecast && (
+          <>
+            <div className="pb-4">
+              <label htmlFor="day">Select date:
+                <select
+                  name="day"
+                  id="day"
+                  value={day}
+                  onChange={e => setDay(Number(e.target.value))}
+                  className="ml-4 p-2 rounded"
+                >
+                  {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
+                </select>
+              </label>
+            </div>
+          </>
+        )}
+      </section>
+
       {isLoaded && forecast && (
         <>
-          <div className="pb-4">
-            <label htmlFor="day">Select date:
-              <select
-                name="day"
-                id="day"
-                value={day}
-                onChange={e => setDay(Number(e.target.value))}
-                className="ml-4 p-2 rounded"
-              >
-                {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
-              </select>
-            </label>
-          </div>
-
-
-          <section className="w-full grid lg:grid-cols-2 gap-4 mb-8">
+          <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
             <section>
               <WeatherTable
                 tableData={tableData}
@@ -215,114 +281,114 @@ function Weather() {
                 location={location}
               />
             </section>
-            <section className="grid grid-cols-2 grid-rows-2 border-2 border-red">
+            <section className="grid lg:grid-cols-2 lg:grid-rows-2 grid-cols-1 grid-rows-4 border-2 border-grey rounded h-max-[100vh] h-min-[75vh]">
               <section>
-              <Line
-                options={{
-                  ...options, 
-                  plugins: {
-                    ...options.plugins,
-                    title: {
-                      display: true,
-                      text: "Temperature °C",
+                <Line
+                  options={{
+                    ...options,
+                    plugins: {
+                      ...options.plugins,
+                      title: {
+                        display: true,
+                        text: "Temperature °C",
+                      },
                     },
-                  },
-                }}
-                data={{
-                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                  datasets: [{
-                    fill: true,
-                    label: 'Hourly Temperature °C',
-                    data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                  }],
-                }}
-              />
+                  }}
+                  data={{
+                    labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                    datasets: [{
+                      fill: true,
+                      label: 'Hourly Temperature °C',
+                      data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                      borderColor: 'rgb(255, 99, 132)',
+                      backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    }],
+                  }}
+                />
               </section>
               <section>
-              <Line
-                options={{
-                  ...options,
-                  plugins: {
-                    ...options.plugins,
-                    title: {
-                      display: true,
-                      text: "Precipitation Probability",
+                <Line
+                  options={{
+                    ...options,
+                    plugins: {
+                      ...options.plugins,
+                      title: {
+                        display: true,
+                        text: "Precipitation Probability",
+                      },
                     },
-                  },
-                  scales: {
-                    y: {
-                      min: 0,
-                      max: 100,
+                    scales: {
+                      y: {
+                        min: 0,
+                        max: 100,
+                      }
                     }
-                  }
-                }}
-                data={{
-                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                  datasets: [{
-                    fill: true,
-                    label: 'Hourly Percent of Precipitation',
-                    data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(0, 190, 255)',
-                    backgroundColor: 'rgba(0, 190, 255, 0.5)',
-                  }],
-                }}
-              />
+                  }}
+                  data={{
+                    labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                    datasets: [{
+                      fill: true,
+                      label: 'Hourly Percent of Precipitation',
+                      data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
+                      borderColor: 'rgb(0, 190, 255)',
+                      backgroundColor: 'rgba(0, 190, 255, 0.5)',
+                    }],
+                  }}
+                />
               </section>
               <section>
-              <Line
-                options={{
-                  ...options, 
-                  plugins: {
-                    ...options.plugins,
-                    title: {
-                      display: true,
-                      text: "Relative Humidity",
+                <Line
+                  options={{
+                    ...options,
+                    plugins: {
+                      ...options.plugins,
+                      title: {
+                        display: true,
+                        text: "Relative Humidity",
+                      },
                     },
-                  },
-                  scales: {
-                    y: {
-                      min: 0,
-                      max: 100,
+                    scales: {
+                      y: {
+                        min: 0,
+                        max: 100,
+                      }
                     }
-                  }
-                }}
-                data={{
-                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                  datasets: [{
-                    fill: true,
-                    label: 'Relative Humidity (%)',
-                    data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(10, 220, 132)',
-                    backgroundColor: 'rgba(10, 220, 132, 0.5)',
-                  }],
-                }}
-              />
+                  }}
+                  data={{
+                    labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                    datasets: [{
+                      fill: true,
+                      label: 'Relative Humidity (%)',
+                      data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                      borderColor: 'rgb(10, 220, 132)',
+                      backgroundColor: 'rgba(10, 220, 132, 0.5)',
+                    }],
+                  }}
+                />
               </section>
               <section>
-              <Line
-                options={{
-                  ...options, 
-                  plugins: {
-                    ...options.plugins,
-                    title: {
-                      display: true,
-                      text: "Wind Speed",
+                <Line
+                  options={{
+                    ...options,
+                    plugins: {
+                      ...options.plugins,
+                      title: {
+                        display: true,
+                        text: "Wind Speed",
+                      },
                     },
-                  },
-                }}
-                data={{
-                  labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                  datasets: [{
-                    fill: true,
-                    label: 'Wind Speed (km/h)',
-                    data: forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number),
-                    borderColor: 'rgb(99, 132, 220)',
-                    backgroundColor: 'rgba(99, 132, 220, 0.5)',
-                  }],
-                }}
-              />
+                  }}
+                  data={{
+                    labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
+                    datasets: [{
+                      fill: true,
+                      label: 'Wind Speed (km/h)',
+                      data: forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number),
+                      borderColor: 'rgb(99, 132, 220)',
+                      backgroundColor: 'rgba(99, 132, 220, 0.5)',
+                    }],
+                  }}
+                />
               </section>
             </section>
           </section>
