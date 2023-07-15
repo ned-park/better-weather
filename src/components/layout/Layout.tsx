@@ -1,12 +1,8 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import Header from "../Header";
 import Footer from "../Footer";
 
-type LayoutOwnProps = {
-  handleShowPreviousSearch?: boolean;
-};
-
-function Layout({children} : {children: React.FC<PropsWithChildren & LayoutOwnProps>}) {
+function Layout({children} : {children: ReactNode}) {
 
   return (
     <main className="min-h-screen">
