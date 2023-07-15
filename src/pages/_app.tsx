@@ -13,7 +13,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
     <Head>
-      <title>Better Weather</title>
+      <title>{process.env.NEXT_PUBLIC_TITLE}</title>
       <meta name="description" content="Weather forecast aggregator, includes wet bulb temperatures, and moon phase" />
       <link rel="icon" href="/favicon.ico" />
     </Head>

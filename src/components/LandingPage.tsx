@@ -1,12 +1,13 @@
 // import { useUser } from "@clerk/nextjs";
-// import Image from "next/image";
-
+import Image from "next/image";
+import image from "../../public/sample.png"
 function LandingPage() {
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col gap-8 mt-16">
       <h1 className="text-6xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
-      <section>
-        <h2 className="font-bold">{process.env.NEXT_PUBLIC_TITLE} offers </h2>
+      <section className="flex flex-col xl:flex-row gap-4">
+      <section className="flex flex-col justify-center">
+        <h2 className="font-bold text-xl">{process.env.NEXT_PUBLIC_TITLE} offers </h2>
         <ul>
           <li>Weekly Weather Forecasts</li>
           <li>Customizable saved locations</li>
@@ -17,7 +18,8 @@ function LandingPage() {
         <p>Signing up enables default and saved locations, since geolocated IP addresses tend to be inaccurate outside of large cities.</p>
       </section>
       <section>
-        {/* <p>Full functionality of the site exists for all users, but signing up enables saving multiple locations, notes, </p> */}
+        <Image src={image} alt="How site is displaying the weather forecast for Toronto"/>
+      </section>
       </section>
     </main>
   )
