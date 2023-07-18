@@ -19,8 +19,8 @@ import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
 
 
-const LAT = process.env.NEXT_PUBLIC_TEST_LAT || "";
-const LONG = process.env.NEXT_PUBLIC_TEST_LONG || "";
+const LAT = "";
+const LONG = "";
 
 export interface Place {
   id: number;
@@ -189,7 +189,10 @@ function Weather() {
       void await getForecastData();
     }
 
-    void getForecast();
+    if (latLong.latitude.length > 0 && latLong.longitude.length > 0) {
+      void getForecast();
+    }
+
   }, [latLong]);
 
   const getTableData = () => {
