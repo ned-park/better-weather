@@ -7,11 +7,13 @@ function Modal({
   setLatLong,
   setShowModal,
   setLocation,
+  setQuery,
 }: {
   places: Place[],
   setLatLong: React.Dispatch<React.SetStateAction<LatLong>>,
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>,
   setLocation: React.Dispatch<React.SetStateAction<string>>,
+  setQuery: React.Dispatch<React.SetStateAction<string>>,
 }) {
 
   const handleSelection = (e: MouseEvent, place: Place) => {
@@ -22,6 +24,7 @@ function Modal({
       longitude: String(place.longitude),
     });
     setLocation(place.name);
+    setQuery("");
     setShowModal(false);
   }
   return (

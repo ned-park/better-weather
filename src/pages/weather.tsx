@@ -19,8 +19,8 @@ import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
 
 
-const LAT = process.env.NEXT_PUBLIC_TEST_LAT || "";
-const LONG = process.env.NEXT_PUBLIC_TEST_LONG || "";
+const LAT = "";
+const LONG = "";
 
 export interface Place {
   id: number;
@@ -154,7 +154,8 @@ weatherIcons.set(99, "⛈️");
 
 
 function Weather() {
-  const [location, setLocation] = useState('location');
+  const [query, setQuery] = useState('');
+  const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -163,7 +164,7 @@ function Weather() {
   const [day, setDay] = useState(0);
 
   const getLatLong = async () => {
-    return /*const res =*/ await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${location}&count=10&language=en&format=json`);
+    return /*const res =*/ await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=10&language=en&format=json`);
     // if (res.ok) {
     // const data = await res.json();
     // const results = data.results;
@@ -189,7 +190,10 @@ function Weather() {
       void await getForecastData();
     }
 
-    void getForecast();
+    if (latLong.latitude.length > 0 && latLong.longitude.length > 0) {
+      void getForecast();
+    }
+
   }, [latLong]);
 
   const getTableData = () => {
@@ -236,7 +240,7 @@ function Weather() {
 
   if (showModal && places) {
     return (
-        <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} />
+        <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
     )
   } 
   else {
@@ -245,8 +249,8 @@ function Weather() {
         <section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
           <div className="flex flex-col md:flex-row gap-4">
             <input
-              onChange={(e) => setLocation(e.target.value)}
-              value={location}
+              onChange={(e) => setQuery(e.target.value)}
+              value={query}
               className="border-2 border-grey rounded p-2"
             />
             <button
@@ -319,7 +323,7 @@ function Weather() {
                         ...options.plugins,
                         title: {
                           display: true,
-                          text: "Precipitation Probability",
+                          text: "Precipitation Probability, Relative Humidity",
                         },
                       },
                       scales: {
@@ -337,7 +341,15 @@ function Weather() {
                         data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
                         borderColor: 'rgb(0, 190, 255)',
                         backgroundColor: 'rgba(0, 190, 255, 0.5)',
-                      }],
+                      },
+                      {
+                        fill: true,
+                        label: 'Relative Humidity (%)',
+                        data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
+                        borderColor: 'rgb(10, 220, 132)',
+                        backgroundColor: 'rgba(10, 220, 132, 0.5)',
+                      }
+                      ],
                     }}
                   />
                 </section>
