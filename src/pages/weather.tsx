@@ -152,7 +152,6 @@ weatherIcons.set(95, "⛈️");
 weatherIcons.set(96, "⛈️");
 weatherIcons.set(99, "⛈️");
 
-
 function Weather() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
@@ -172,6 +171,24 @@ function Weather() {
     // if (!results || !results.longitude || !results.latitude) return;
     // setLatLong({longitude: data.longitude, latitude: data.latitude} as LatLong);
     // }
+  }
+
+  const findPercentDiffs = (arr: number[]): number[] => {
+    if (!arr || arr.length < 1) return arr;
+    arr = arr.map(Number);
+    const out: number[] = new Array<number>(arr.length - 1).fill(0);
+    for (let i = 1; i < arr.length; i++) {
+      const x2 = arr[i];
+      const x1 = arr[i - 1];
+      if (x2 && !isNaN(x2) && x1 && !isNaN(x1))
+        if (x1 !== 0) {
+          out[i - 1] = (Math.abs((x2 - x1)) / (x1 || 0.00000000000001) * 100);
+        } else {
+          out[i - 1] = 100;
+        }
+    }
+
+    return out;
   }
 
   useEffect(() => {
@@ -240,9 +257,9 @@ function Weather() {
 
   if (showModal && places) {
     return (
-        <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
+      <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
     )
-  } 
+  }
   else {
     return (
       <Layout>
@@ -361,36 +378,6 @@ function Weather() {
                         ...options.plugins,
                         title: {
                           display: true,
-                          text: "Relative Humidity",
-                        },
-                      },
-                      scales: {
-                        y: {
-                          min: 0,
-                          max: 100,
-                        }
-                      }
-                    }}
-                    data={{
-                      labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                      datasets: [{
-                        fill: true,
-                        label: 'Relative Humidity (%)',
-                        data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                        borderColor: 'rgb(10, 220, 132)',
-                        backgroundColor: 'rgba(10, 220, 132, 0.5)',
-                      }],
-                    }}
-                  />
-                </section>
-                <section>
-                  <Line
-                    options={{
-                      ...options,
-                      plugins: {
-                        ...options.plugins,
-                        title: {
-                          display: true,
                           text: "Wind Speed",
                         },
                       },
@@ -404,6 +391,54 @@ function Weather() {
                         borderColor: 'rgb(99, 132, 220)',
                         backgroundColor: 'rgba(99, 132, 220, 0.5)',
                       }],
+                    }}
+                  />
+                </section>
+                <section>
+                  <Line
+                    options={{
+                      ...options,
+                      plugins: {
+                        ...options.plugins,
+                        title: {
+                          display: true,
+                          text: "Hourly changes as percent",
+                        },
+                      },
+                      scales: {
+                        y: {
+                          min: 0,
+                          max: 100,
+                        }
+                      }
+                    }}
+                    data={{
+                      labels: forecast.hourly.time.slice(24 * day + 1, 24 * (day + 1)),
+                      datasets: [{
+                        label: 'Change in Relative Humidity (%)',
+                        data: findPercentDiffs(forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number)),
+                        borderColor: 'rgb(10, 220, 132)',
+                        backgroundColor: 'rgba(10, 220, 132, 0.5)',
+                      },
+                      {
+                        label: 'Change in Temperature (%)',
+                        data: findPercentDiffs(forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number)),
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                      },
+                      {
+                        label: 'Change in PoP (%)',
+                        data: findPercentDiffs(forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number)),
+                        borderColor: 'rgb(0, 190, 255)',
+                        backgroundColor: 'rgba(0, 190, 255, 0.5)'
+                      },
+                      {
+                        label: 'Change in Windspeed (%)',
+                        data: findPercentDiffs(forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number)),
+                        borderColor: 'rgb(99, 132, 220)',
+                        backgroundColor: 'rgba(99, 132, 220, 0.5)',
+                      },
+                      ],
                     }}
                   />
                 </section>
