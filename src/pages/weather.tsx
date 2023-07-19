@@ -233,7 +233,7 @@ function Weather() {
 
   const changeLocation = async (event: MouseEvent) => {
     event.preventDefault();
-    console.log("clicked");
+
     const res = await getLatLong();
     if (res.ok) {
       const data = await res.json() as Location;
