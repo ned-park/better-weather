@@ -163,7 +163,7 @@ function Weather() {
   const [day, setDay] = useState(0);
 
   const getLatLong = async () => {
-    return /*const res =*/ await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=10&language=en&format=json`);
+    return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=30&language=en&format=json`);
     // if (res.ok) {
     // const data = await res.json();
     // const results = data.results;
