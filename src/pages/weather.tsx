@@ -199,7 +199,7 @@ function Weather() {
 
   const tableData = getTableData();
 
-  const changeLocation = async (event: MouseEvent) => {
+  const changeLocation = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const res = await getLatLong();
@@ -232,19 +232,16 @@ function Weather() {
     return (
       <Layout>
         <section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>
             <input
               onChange={(e) => setQuery(e.target.value)}
               value={query}
               className="border-2 border-grey rounded p-2"
             />
-            <button
-              onClick={(e) => { void changeLocation(e) }}
-              className="bg-sky-500 rounded p-2  px-4"
-            >
+            <button className="bg-sky-500 rounded p-2  px-4">
               Submit
             </button>
-          </div>
+          </form>
           {isLoaded && forecast && (
             <>
               <div className="pb-4">
@@ -414,8 +411,6 @@ function Weather() {
             </section>
           </>
         )}
-
-
       </Layout>
     )
   }
