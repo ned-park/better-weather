@@ -1,19 +1,11 @@
 import * as uniqId from 'uniqid';
 import { Noto_Color_Emoji } from 'next/font/google'
+import { humanReadable } from '~/utils/hashmaps';
 
 const emoji = Noto_Color_Emoji({ 
   weight: "400",
   subsets: ['emoji'],
 });
-
-const humanReadable = new Map<string, string>();
-humanReadable.set("time", "Time");
-humanReadable.set("temperature_2m", "T");
-humanReadable.set("relativehumidity_2m", "RH");
-humanReadable.set("precipitation_probability", "PoP");
-humanReadable.set("precipitation", "H20");
-humanReadable.set("weathercode", "Type");
-humanReadable.set("windspeed_10m", "Wind");
 
 function WeatherTable({
   tableData,

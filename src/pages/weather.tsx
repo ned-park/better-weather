@@ -12,12 +12,10 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import * as uniqId from 'uniqid';
-import type { MouseEvent } from 'react';
-
 import Layout from "~/components/layout/Layout";
 import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
-
+import { weatherIcons } from "~/utils/hashmaps";
 
 const LAT = "";
 const LONG = "";
@@ -121,36 +119,6 @@ ChartJS.register(
   Filler,
   Legend,
 );
-
-const weatherIcons = new Map<number, string>();
-weatherIcons.set(0, "☀️");
-weatherIcons.set(1, "🌤️");
-weatherIcons.set(2, "🌥️");
-weatherIcons.set(3, "☁️");
-weatherIcons.set(45, "🌫️");
-weatherIcons.set(48, "❄️");
-weatherIcons.set(51, "☁️🌧️☁️");
-weatherIcons.set(53, "🌧️☁️");
-weatherIcons.set(55, "🌧️");
-weatherIcons.set(56, "❄️");
-weatherIcons.set(57, "❄️❄️");
-weatherIcons.set(61, "☁️🌧️☁️");
-weatherIcons.set(63, "🌧️☁️");
-weatherIcons.set(65, "🌧️");
-weatherIcons.set(66, "❄️🌧️");
-weatherIcons.set(67, "🌧️❄️🌧️");
-weatherIcons.set(71, "🌨️");
-weatherIcons.set(73, "🌨️🌨️");
-weatherIcons.set(75, "🌨️🌨️🌨️");
-weatherIcons.set(77, "❄️");
-weatherIcons.set(80, "🌧️");
-weatherIcons.set(81, "🌧️🌧️");
-weatherIcons.set(82, "🌧️🌧️🌧️");
-weatherIcons.set(85, "🌨️");
-weatherIcons.set(86, "🌨️🌨️");
-weatherIcons.set(95, "⛈️");
-weatherIcons.set(96, "⛈️");
-weatherIcons.set(99, "⛈️");
 
 function Weather() {
   const [query, setQuery] = useState('');
