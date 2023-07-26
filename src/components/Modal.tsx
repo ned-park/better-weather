@@ -28,7 +28,7 @@ function Modal({
     setShowModal(false);
   }
   return (
-        <section className="fixed bg-sky-100 bg-opacity-80 top-0 left-0 w-full h-full flex justify-center items-center z-10">
+        <section className="bg-sky-100 bg-opacity-80 min-w-full min-h-full flex justify-center items-center z-10">
     <div className="bg-sky-50 bg-opacity-100 shadow-lg p-2 md:p-16 h-200 z-50">
         <ul className="flex flex-col gap-1 md:gap-4 text-center overflow-visible overflow-auto z-50">
           {places.map((place: Place) => (
