@@ -16,6 +16,7 @@ import Layout from "~/components/layout/Layout";
 import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
 import { weatherIcons } from "~/utils/hashmaps";
+import { toast } from "react-hot-toast";
 
 const LAT = "";
 const LONG = "";
@@ -131,7 +132,13 @@ function Weather() {
   const [day, setDay] = useState(0);
 
   const getLatLong = async () => {
-    return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=30&language=en&format=json`);
+    try {
+      if (!query || query.length == 0) throw new Error("Expected query to have a value");
+      const places = query.split(',');
+      return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]!}&count=30&language=en&format=json`);
+    } catch (err) {
+      toast.error("Expected query to have a value");
+    }
     // if (res.ok) {
     // const data = await res.json();
     // const results = data.results;
@@ -203,7 +210,7 @@ function Weather() {
     event.preventDefault();
 
     const res = await getLatLong();
-    if (res.ok) {
+    if (res && res.ok) {
       const data = await res.json() as Location;
       const results = data.results;
       if (results.length > 1) {
@@ -236,6 +243,7 @@ function Weather() {
             <input
               onChange={(e) => setQuery(e.target.value)}
               value={query}
+              placeholder="City name"
               className="border-2 border-grey rounded p-2"
             />
             <button className="bg-sky-500 rounded p-2  px-4">
