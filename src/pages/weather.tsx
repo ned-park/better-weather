@@ -131,7 +131,9 @@ function Weather() {
   const [day, setDay] = useState(0);
 
   const getLatLong = async () => {
-    return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=30&language=en&format=json`);
+    if (!query || query.length == 0) throw new Error("Expected query to have a value");
+    const places = query.split(',');
+    return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]!}&count=30&language=en&format=json`);
     // if (res.ok) {
     // const data = await res.json();
     // const results = data.results;
