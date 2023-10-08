@@ -8,8 +8,8 @@ graph form.  This makes it easy to see specific details and changes.
 
 Typescript, clerk, Next.js, Prisma, tRPC, PlanetScale, tailwindcss, vercel
 
-using data from [https://open-meto.com](open-meteo.com).
+using data from [https://open-meto.com](https://open-meteo.com).
 
 ## See it live
 
-For a live demo visit [https://weekly-weather.vercel.app/weather](weekly-weather.vercel.app/weather)
+For a live demo visit [https://weekly-weather.vercel.app/weather](https://weekly-weather.vercel.app/weather)
