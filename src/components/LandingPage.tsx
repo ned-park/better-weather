@@ -16,7 +16,7 @@ function LandingPage() {
             <li>Weather alerts (coming soon)</li>
             <li>Assorted graphs to easily visualize data weather</li>
           </ul>
-          <p>Signing up enables default and saved locations, since geolocated IP addresses tend to be inaccurate outside of large cities.</p>
+          <p>Signing up enables default and saved locations (coming soon), since geolocated IP addresses tend to be inaccurate outside of large cities.</p>
           <section>
             <Link href="weather">Find your weather <span className="font-bold">here</span>!</Link>
           </section>
