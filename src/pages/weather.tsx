@@ -99,7 +99,7 @@ export const options = {
   plugins: {
     legend: {
       position: "top" as const,
-
+      align: "start" as const,
     },
   },
 }
