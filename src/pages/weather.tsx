@@ -24,9 +24,6 @@ import type { Location } from "~/interfaces/location";
 import type { Forecast, ForecastData } from "~/interfaces/forecast";
 import type { LatLong } from "~/interfaces/latlong";
 
-const LAT = "";
-const LONG = "";
-
 export const options = {
   maintainAspectRatio: false,
   plugins: {
@@ -57,7 +54,7 @@ ChartJS.register(
 function Weather() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
-  const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
+  const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: "", longitude: "" });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(true);
