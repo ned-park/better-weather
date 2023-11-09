@@ -20,7 +20,7 @@ model Location {
   latitude Float 
   longitude Float
   elevation Float
-
+  country String @db.VarChar(255)
   @@index([name])
 }
 
