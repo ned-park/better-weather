@@ -1,6 +1,7 @@
 import * as uniqId from 'uniqid';
 import type { MouseEvent } from 'react';
-import type { LatLong, Place } from '~/pages/weather';
+import type { LatLong } from '~/interfaces/latlong';
+import type { Place } from '~/interfaces/place';
 
 function Modal({
   places,

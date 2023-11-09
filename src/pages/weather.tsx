@@ -13,86 +13,19 @@ import {
 import { Line } from "react-chartjs-2";
 import * as uniqId from 'uniqid';
 import Layout from "~/components/layout/Layout";
+import LoadingSpinner from "~/components/Loading";
 import Modal from "~/components/Modal";
 import WeatherTable from "~/components/WeatherTable";
 import { weatherIcons } from "~/utils/hashmaps";
 import { toast } from "react-hot-toast";
 
+import type { Place } from "~/interfaces/place";
+import type { Location } from "~/interfaces/location";
+import type { Forecast, ForecastData } from "~/interfaces/forecast";
+import type { LatLong } from "~/interfaces/latlong";
+
 const LAT = "";
 const LONG = "";
-
-export interface Place {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  feature_code: string;
-  country_code: string;
-  admin1_id: number;
-  timezone: string;
-  population?: number | null;
-  country_id: number;
-  country: string;
-  admin1: string;
-  admin2_id?: number | null;
-  postcodes?: (string)[] | null;
-  admin2?: string | null;
-  admin3_id?: number | null;
-  admin3?: string | null;
-}
-
-interface Location {
-  results: (Place)[];
-  generationtime_ms: number;
-}
-
-interface Hourly {
-  time: Array<string>;
-  temperature_2m: Array<number>;
-  precipitation_probability: Array<number>;
-  precipitation: Array<number>;
-  weathercode: Array<number>;
-  relativehumidity_2m: Array<number>;
-  windspeed_10m: Array<number>;
-}
-
-interface HourlyUnits {
-  "time": string;
-  "temperature_2m": string;
-  "relativehumidity_2m": string;
-  "precipitation_probability": string;
-  "precipitation": string;
-  "weathercode": string;
-  "windspeed_10m": string;
-}
-
-interface ForecastData {
-  labels?: Array<string>;
-  data?: Array<number>;
-  backgroundColor?: string;
-  borderColor?: string;
-  datasets: Array<number>;
-}
-
-interface Forecast {
-  elevation: number;
-  generationtime_ms: number;
-  hourly: Hourly;
-  hourly_units: HourlyUnits;
-  temperature_2m?: string;
-  time?: string;
-  latitude: number;
-  longitude: number;
-  timezone: string;
-  timezone_abbreviation: string;
-  utc_offset_seconds: number;
-}
-
-export interface LatLong {
-  latitude: string;
-  longitude: string;
-}
 
 export const options = {
   maintainAspectRatio: false,
@@ -182,7 +115,7 @@ function Weather() {
       // void await getLatLong();
       setIsLoading(true);
       void await getForecastData();
-    setIsLoading(false);
+      setIsLoading(false);
 
     }
 
@@ -229,16 +162,22 @@ function Weather() {
           longitude: String(results[0].longitude),
         })
       }
-      // const results = data.results;
-      console.log(data);
+
+      setIsLoading(false);
     }
+  }
+
+  if (isLoading) {
+    return (
+      <LoadingSpinner />
+    )
   }
 
   if (showModal && places) {
     return (
       <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
     )
-  }
+  } 
   else {
     return (
       <Layout>
