@@ -126,7 +126,7 @@ function Weather() {
   const [location, setLocation] = useState('');
   const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
   const [forecast, setForecast] = useState<Forecast>();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(true);
   const [places, setPlaces] = useState<Place[]>();
   const [day, setDay] = useState(0);
@@ -135,7 +135,8 @@ function Weather() {
     try {
       if (!query || query.length == 0) throw new Error("Expected query to have a value");
       const places = query.split(',');
-      return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]!}&count=30&language=en&format=json`);
+      if (!places[0]) throw new Error("Expected query to have a value");
+      return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]}&count=30&language=en&format=json`);
     } catch (err) {
       toast.error("Expected query to have a value");
     }
@@ -173,13 +174,16 @@ function Weather() {
         const data: Forecast = await res.json() as Forecast;
         if (!data) return;
         setForecast(data);
-        setIsLoaded(true);
+        setIsLoading(false);
       }
     }
 
     const getForecast = async () => {
       // void await getLatLong();
+      setIsLoading(true);
       void await getForecastData();
+    setIsLoading(false);
+
     }
 
     if (latLong.latitude.length > 0 && latLong.longitude.length > 0) {
@@ -208,7 +212,7 @@ function Weather() {
 
   const changeLocation = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
+    setIsLoading(true);
     const res = await getLatLong();
     if (res && res.ok) {
       const data = await res.json() as Location;
@@ -250,26 +254,24 @@ function Weather() {
               Submit
             </button>
           </form>
-          {isLoaded && forecast && (
-            <>
-              <div className="pb-4">
-                <label htmlFor="day">Select date:
-                  <select
-                    name="day"
-                    id="day"
-                    value={day}
-                    onChange={e => setDay(Number(e.target.value))}
-                    className="ml-4 p-2 rounded"
-                  >
-                    {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
-                  </select>
-                </label>
-              </div>
-            </>
+          {!isLoading && forecast && (
+            <div className="pb-4">
+              <label htmlFor="day">Select date:
+                <select
+                  name="day"
+                  id="day"
+                  value={day}
+                  onChange={e => setDay(Number(e.target.value))}
+                  className="ml-4 p-2 rounded"
+                >
+                  {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
+                </select>
+              </label>
+            </div>
           )}
         </section>
 
-        {isLoaded && forecast && (
+        {!isLoading && forecast && (
           <>
             <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
               <section>
