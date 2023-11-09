@@ -11,8 +11,28 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Location {
+  id String @id @default(cuid())
+  name String @db.VarChar(255) 
+  admin1 String @db.VarChar(255)
+  admin2 String @db.VarChar(255)
+  admin3 String @db.VarChar(255)
+  latitude Float 
+  longitude Float
+  elevation Float
+
+  @@index([name])
+}
+
+model User {
+  id String @id @default(cuid())
+  defaultLocation String
+}
+
+model UserLocations {
+  id String @id @default(cuid())
+  userId String
+  locationId String
+  
+  @@index([userId])
 }
