@@ -23,6 +23,7 @@ import type { Place } from "~/interfaces/place";
 import type { Location } from "~/interfaces/location";
 import type { Forecast, ForecastData } from "~/interfaces/forecast";
 import type { LatLong } from "~/interfaces/latlong";
+import { api } from "~/utils/api";
 
 export const options = {
   maintainAspectRatio: false,
@@ -54,30 +55,13 @@ ChartJS.register(
 function Weather() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
-  const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: "", longitude: "" });
+  const [latLong, setLatLong] = useState<LatLong>({ latitude: "", longitude: "" });
   const [forecast, setForecast] = useState<Forecast>();
   const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(true);
-  const [places, setPlaces] = useState<Place[]>();
+  const [showModal, setShowModal] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [day, setDay] = useState(0);
-
-  const getLatLong = async () => {
-    try {
-      if (!query || query.length == 0) throw new Error("Expected query to have a value");
-      const places = query.split(',');
-      if (!places[0]) throw new Error("Expected query to have a value");
-      return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]}&count=30&language=en&format=json`);
-    } catch (err) {
-      toast.error("Expected query to have a value");
-    }
-    // if (res.ok) {
-    // const data = await res.json();
-    // const results = data.results;
-    // console.log(data);
-    // if (!results || !results.longitude || !results.latitude) return;
-    // setLatLong({longitude: data.longitude, latitude: data.latitude} as LatLong);
-    // }
-  }
+  const [placeQuery, setPlaceQuery] = useState('');
 
   const findPercentDiffs = (arr: number[]): number[] => {
     if (!arr || arr.length < 1) return arr;
@@ -109,7 +93,6 @@ function Weather() {
     }
 
     const getForecast = async () => {
-      // void await getLatLong();
       setIsLoading(true);
       void await getForecastData();
       setIsLoading(false);
@@ -140,28 +123,32 @@ function Weather() {
 
   const tableData = getTableData();
 
-  const changeLocation = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    const res = await getLatLong();
-    if (res && res.ok) {
-      const data = await res.json() as Location;
-      const results = data.results;
-      if (results.length > 1) {
-        setShowModal(true);
-        setPlaces(results);
-      } else if (!results[0]) {
-        throw new Error("Invalid name");
-        console.log("no results");
-      } else {
-        setLatLong({
-          latitude: String(results[0].latitude),
-          longitude: String(results[0].longitude),
-        })
-      }
+  const { data } = api.location.getPlacesByName.useQuery({ name: placeQuery }, {
+    enabled: placeQuery.length > 0
+  });
 
+  if (data) {
+    setPlaces(data);
+    setPlaceQuery('');
+  }
+
+
+
+  const changeLocation = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // setIsLoading(true);
+    try {
+      if (!query || query.length == 0) throw new Error("Expected query to have a value initial");
+      const places = query.split(',');
+      if (!places[0]) throw new Error("Expected query to have a value");
+      setPlaceQuery(places[0]);
+      setShowModal(true);
+      return data;
+    } catch (err) {
+      toast.error("Expected query to have a value");
       setIsLoading(false);
     }
+
   }
 
   if (isLoading) {
@@ -170,11 +157,20 @@ function Weather() {
     )
   }
 
-  if (showModal && places) {
+  if (showModal && places && places.length > 0) {
     return (
-      <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
+      <Modal
+        places={places}
+        setLatLong={setLatLong}
+        setShowModal={setShowModal}
+        setLocation={setLocation}
+        setQuery={setQuery}
+        setPlaces={setPlaces}
+        setIsLoading={(setIsLoading)}
+      />
     )
-  } 
+  }
+
   else {
     return (
       <Layout>

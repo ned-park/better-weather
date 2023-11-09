@@ -9,17 +9,22 @@ function Modal({
   setShowModal,
   setLocation,
   setQuery,
+  setPlaces,
+  setIsLoading,
 }: {
   places: Place[],
   setLatLong: React.Dispatch<React.SetStateAction<LatLong>>,
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>,
   setLocation: React.Dispatch<React.SetStateAction<string>>,
   setQuery: React.Dispatch<React.SetStateAction<string>>,
+  setPlaces: React.Dispatch<React.SetStateAction<Place[]>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
 }) {
 
   const handleSelection = (e: MouseEvent, place: Place) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsLoading(false);
     setLatLong({
       latitude: String(place.latitude),
       longitude: String(place.longitude),
@@ -27,6 +32,7 @@ function Modal({
     setLocation(place.name);
     setQuery("");
     setShowModal(false);
+    setPlaces([]);
   }
   return (
     <section className="bg-sky-100 bg-opacity-80 min-w-full min-h-screen flex justify-center items-center z-10">
@@ -38,7 +44,7 @@ function Modal({
               onClick={(e) => handleSelection(e, place)}
               className="cursor-pointer border-b-2 grey"
             >
-              {[place.name, place.admin1, place.country].filter((p: string) => p && p.length > 0).join(", ")}
+              {[place.name, place.admin1, place.country].filter((p: string | undefined) => p && p.length > 0).join(", ")}
             </li>))}
         </ul>
       </div>
