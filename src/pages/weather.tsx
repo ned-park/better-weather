@@ -1,170 +1,95 @@
-import { useEffect, useState } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Filler,
-  Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
+
 import * as uniqId from 'uniqid';
 import Layout from "~/components/layout/Layout";
+import LoadingSpinner from "~/components/Loading";
 import Modal from "~/components/Modal";
+import WeatherCharts from "~/components/WeatherCharts";
 import WeatherTable from "~/components/WeatherTable";
 import { weatherIcons } from "~/utils/hashmaps";
 import { toast } from "react-hot-toast";
+import { api } from "~/utils/api";
+import { useUser } from "@clerk/nextjs";
 
-const LAT = "";
-const LONG = "";
+import type { Forecast } from "~/interfaces/forecast";
+import type { LatLong } from "~/interfaces/latlong";
+import type { Place } from "~/interfaces/place";
 
-export interface Place {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  feature_code: string;
-  country_code: string;
-  admin1_id: number;
-  timezone: string;
-  population?: number | null;
-  country_id: number;
-  country: string;
-  admin1: string;
-  admin2_id?: number | null;
-  postcodes?: (string)[] | null;
-  admin2?: string | null;
-  admin3_id?: number | null;
-  admin3?: string | null;
-}
-
-interface Location {
-  results: (Place)[];
-  generationtime_ms: number;
-}
-
-interface Hourly {
-  time: Array<string>;
-  temperature_2m: Array<number>;
-  precipitation_probability: Array<number>;
-  precipitation: Array<number>;
-  weathercode: Array<number>;
-  relativehumidity_2m: Array<number>;
-  windspeed_10m: Array<number>;
-}
-
-interface HourlyUnits {
-  "time": string;
-  "temperature_2m": string;
-  "relativehumidity_2m": string;
-  "precipitation_probability": string;
-  "precipitation": string;
-  "weathercode": string;
-  "windspeed_10m": string;
-}
-
-interface ForecastData {
-  labels?: Array<string>;
-  data?: Array<number>;
-  backgroundColor?: string;
-  borderColor?: string;
-  datasets: Array<number>;
-}
-
-interface Forecast {
-  elevation: number;
-  generationtime_ms: number;
-  hourly: Hourly;
-  hourly_units: HourlyUnits;
-  temperature_2m?: string;
-  time?: string;
-  latitude: number;
-  longitude: number;
-  timezone: string;
-  timezone_abbreviation: string;
-  utc_offset_seconds: number;
-}
-
-export interface LatLong {
-  latitude: string;
-  longitude: string;
-}
-
-export const options = {
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: "top" as const,
-      align: "start" as const,
+const SetDefaultLocation = ({ location }: { location: { name: string, id: string } }) => {
+  const { mutate } = api.userLocation.setDefaultLocation.useMutation({
+    onSuccess: () => {
+      toast.success(`Default Location is now ${location.name}`);
     },
-  },
+    onError: (e) => {
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage && errorMessage[0]) {
+        toast.error(errorMessage[0]);
+      } else {
+        toast.error("Failed to change default location! Please try again later.");
+      }
+    },
+  });
+
+  return (
+    <button
+      className="bg-sky-500 rounded p-2  px-4"
+      onClick={() => mutate({ locationId: location.id })}
+    >
+      Make Default
+    </button>
+  )
 }
-
-export const forecastData: ForecastData = {
-  backgroundColor: "rgba(255,99,132, 0.5)",
-  borderColor: "rgb(255,99,132)",
-  datasets: [],
-};
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Filler,
-  Legend,
-);
 
 function Weather() {
+  const { user } = useUser();
+
   const [query, setQuery] = useState('');
-  const [location, setLocation] = useState('');
-  const [latLong, setLatLong] = useState<LatLong/* | undefined*/>({ latitude: LAT, longitude: LONG });
+  const [location, setLocation] = useState({ name: '', id: '' });
+  const [latLong, setLatLong] = useState<LatLong>({ latitude: "", longitude: "" });
   const [forecast, setForecast] = useState<Forecast>();
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [showModal, setShowModal] = useState(true);
-  const [places, setPlaces] = useState<Place[]>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [day, setDay] = useState(0);
+  const [placeQuery, setPlaceQuery] = useState('');
 
-  const getLatLong = async () => {
-    try {
-      if (!query || query.length == 0) throw new Error("Expected query to have a value");
-      const places = query.split(',');
-      return await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${places[0]!}&count=30&language=en&format=json`);
-    } catch (err) {
-      toast.error("Expected query to have a value");
-    }
-    // if (res.ok) {
-    // const data = await res.json();
-    // const results = data.results;
-    // console.log(data);
-    // if (!results || !results.longitude || !results.latitude) return;
-    // setLatLong({longitude: data.longitude, latitude: data.latitude} as LatLong);
-    // }
-  }
+  useEffect(() => {
+    const getDefaultLocation = async () => {
 
-  const findPercentDiffs = (arr: number[]): number[] => {
-    if (!arr || arr.length < 1) return arr;
-    arr = arr.map(Number);
-    const out: number[] = new Array<number>(arr.length - 1).fill(0);
-    for (let i = 1; i < arr.length; i++) {
-      const x2 = arr[i];
-      const x1 = arr[i - 1];
-      if (x2 && !isNaN(x2) && x1 && !isNaN(x1))
-        if (x1 !== 0) {
-          out[i - 1] = (Math.abs((x2 - x1)) / (x1 || 0.00000000000001) * 100);
-        } else {
-          out[i - 1] = 100;
+      interface DefaultLocationResponse {
+        result: {
+          data: {
+            json: {
+              id: string;
+              name: string;
+              admin1: string;
+              admin2: string;
+              admin3: string;
+              latitude: number;
+              longitude: number;
+              elevation: number;
+              country: string;
+            }
+          }
+        };
+      }
+
+      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation`);
+
+      if (res.ok) {
+        const data = await res.json() as DefaultLocationResponse;
+        if (data !== null) {
+          const place = data.result.data.json as Place;
+          setLocation({ name: place.name, id: place.id });
+          setLatLong({ latitude: `${place.latitude}`, longitude: `${place.longitude}` });
         }
+      }
     }
 
-    return out;
-  }
+    if (user) {
+      void getDefaultLocation();
+    }
+  }, [user]);
 
   useEffect(() => {
     const getForecastData = async () => {
@@ -173,13 +98,14 @@ function Weather() {
         const data: Forecast = await res.json() as Forecast;
         if (!data) return;
         setForecast(data);
-        setIsLoaded(true);
+        setIsLoading(false);
       }
     }
 
     const getForecast = async () => {
-      // void await getLatLong();
+      setIsLoading(true);
       void await getForecastData();
+      setIsLoading(false);
     }
 
     if (latLong.latitude.length > 0 && latLong.longitude.length > 0) {
@@ -206,53 +132,63 @@ function Weather() {
 
   const tableData = getTableData();
 
-  const changeLocation = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const { data: placesData } = api.location.getPlacesByName.useQuery({ name: placeQuery }, {
+    enabled: placeQuery.length > 0
+  });
 
-    const res = await getLatLong();
-    if (res && res.ok) {
-      const data = await res.json() as Location;
-      const results = data.results;
-      if (results.length > 1) {
-        setShowModal(true);
-        setPlaces(results);
-      } else if (!results[0]) {
-        throw new Error("Invalid name");
-        console.log("no results");
-      } else {
-        setLatLong({
-          latitude: String(results[0].latitude),
-          longitude: String(results[0].longitude),
-        })
-      }
-      // const results = data.results;
-      console.log(data);
+  if (placesData) {
+    setPlaces(placesData);
+    setPlaceQuery('');
+    setShowModal(true);
+  }
+
+  const changeLocation = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    try {
+      if (!query || query.length == 0) throw new Error("Expected query to have a value initial");
+      const places = query.split(',');
+      if (!places[0]) throw new Error("Expected query to have a value");
+      setPlaceQuery(places[0]);
+      return placesData;
+    } catch (err) {
+      toast.error("Expected query to have a value");
+      setIsLoading(false);
     }
   }
 
-  if (showModal && places) {
+  if (showModal && places && places.length > 0) {
     return (
-      <Modal places={places} setLatLong={setLatLong} setShowModal={setShowModal} setLocation={setLocation} setQuery={setQuery} />
+      <Modal
+        places={places}
+        setLatLong={setLatLong}
+        setShowModal={setShowModal}
+        setLocation={setLocation}
+        setQuery={setQuery}
+        setPlaces={setPlaces}
+        setIsLoading={(setIsLoading)}
+      />
     )
   }
   else {
     return (
       <Layout>
-        <section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
-          <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>
-            <input
-              onChange={(e) => setQuery(e.target.value)}
-              value={query}
-              placeholder="City name"
-              className="border-2 border-grey rounded p-2"
-            />
-            <button className="bg-sky-500 rounded p-2  px-4">
-              Submit
-            </button>
-          </form>
-          {isLoaded && forecast && (
-            <>
-              <div className="pb-4">
+        {!isLoading && !showModal &&
+
+          (<section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
+            <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>
+              <input
+                onChange={(e) => setQuery(e.target.value)}
+                value={query}
+                placeholder="City name"
+                className="border-2 border-grey rounded p-2"
+              />
+              <button className="bg-sky-500 rounded p-2  px-4">
+                Submit
+              </button>
+            </form>
+            {!isLoading && forecast && (
+              <div className="pb-4 flex gap-2">
                 <label htmlFor="day">Select date:
                   <select
                     name="day"
@@ -264,160 +200,29 @@ function Weather() {
                     {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
                   </select>
                 </label>
+                <SetDefaultLocation location={location} />
               </div>
-            </>
-          )}
-        </section>
-
-        {isLoaded && forecast && (
-          <>
-            <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
-              <section>
-                <WeatherTable
-                  tableData={tableData}
-                  tableHeaders={Object.keys(forecast.hourly)}
-                  tableUnits={Object.values(forecast.hourly_units)}
-                  location={location}
-                />
-              </section>
-              <section className="grid lg:grid-cols-2 lg:grid-rows-2 grid-cols-1 grid-rows-4 border-2 border-grey rounded h-max-[100vh] h-min-[75vh]">
-                <section>
-                  <Line
-                    options={{
-                      ...options,
-                      plugins: {
-                        ...options.plugins,
-                        title: {
-                          display: true,
-                          text: "Temperature °C",
-                        },
-                      },
-                    }}
-                    data={{
-                      labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                      datasets: [{
-                        fill: true,
-                        label: 'Hourly Temperature °C',
-                        data: forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                      }],
-                    }}
-                  />
-                </section>
-                <section className="min-h-[300px]">
-                  <Line
-                    options={{
-                      ...options,
-                      plugins: {
-                        ...options.plugins,
-                        title: {
-                          display: true,
-                          text: "Precipitation Probability, Relative Humidity",
-                        },
-                      },
-                      scales: {
-                        y: {
-                          min: 0,
-                          max: 100,
-                        }
-                      }
-                    }}
-                    data={{
-                      labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                      datasets: [{
-                        fill: true,
-                        label: 'Hourly Percent of Precipitation',
-                        data: forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number),
-                        borderColor: 'rgb(0, 190, 255)',
-                        backgroundColor: 'rgba(0, 190, 255, 0.5)',
-                      },
-                      {
-                        fill: true,
-                        label: 'Relative Humidity (%)',
-                        data: forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number),
-                        borderColor: 'rgb(10, 220, 132)',
-                        backgroundColor: 'rgba(10, 220, 132, 0.5)',
-                      }
-                      ],
-                    }}
-                  />
-                </section>
-                <section>
-                  <Line
-                    options={{
-                      ...options,
-                      plugins: {
-                        ...options.plugins,
-                        title: {
-                          display: true,
-                          text: "Wind Speed",
-                        },
-                      },
-                    }}
-                    data={{
-                      labels: forecast.hourly.time.slice(24 * day, 24 * (day + 1)),
-                      datasets: [{
-                        fill: true,
-                        label: 'Wind Speed (km/h)',
-                        data: forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number),
-                        borderColor: 'rgb(99, 132, 220)',
-                        backgroundColor: 'rgba(99, 132, 220, 0.5)',
-                      }],
-                    }}
-                  />
-                </section>
-                <section>
-                  <Line
-                    options={{
-                      ...options,
-                      plugins: {
-                        ...options.plugins,
-                        title: {
-                          display: true,
-                          text: "Hourly changes as percent",
-                        },
-                      },
-                      scales: {
-                        y: {
-                          min: 0,
-                          max: 100,
-                        }
-                      }
-                    }}
-                    data={{
-                      labels: forecast.hourly.time.slice(24 * day + 1, 24 * (day + 1)),
-                      datasets: [{
-                        label: 'Change in Relative Humidity (%)',
-                        data: findPercentDiffs(forecast.hourly.relativehumidity_2m.slice(24 * day, 24 * (day + 1)).map(Number)),
-                        borderColor: 'rgb(10, 220, 132)',
-                        backgroundColor: 'rgba(10, 220, 132, 0.5)',
-                      },
-                      {
-                        label: 'Change in Temperature (%)',
-                        data: findPercentDiffs(forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1)).map(Number)),
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                      },
-                      {
-                        label: 'Change in PoP (%)',
-                        data: findPercentDiffs(forecast.hourly.precipitation_probability.slice(24 * day, 24 * (day + 1)).map(Number)),
-                        borderColor: 'rgb(0, 190, 255)',
-                        backgroundColor: 'rgba(0, 190, 255, 0.5)'
-                      },
-                      {
-                        label: 'Change in Windspeed (%)',
-                        data: findPercentDiffs(forecast.hourly.windspeed_10m.slice(24 * day, 24 * (day + 1)).map(Number)),
-                        borderColor: 'rgb(99, 132, 220)',
-                        backgroundColor: 'rgba(99, 132, 220, 0.5)',
-                      },
-                      ],
-                    }}
-                  />
-                </section>
-              </section>
+            )}
+          </section>
+          )
+        }
+        {isLoading &&
+          <div className="h-full">
+            <LoadingSpinner />
+          </div>
+        }
+        {!isLoading && forecast && (
+          <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
+            <section>
+              <WeatherTable
+                tableData={tableData}
+                tableHeaders={Object.keys(forecast.hourly)}
+                tableUnits={Object.values(forecast.hourly_units)}
+                location={location.name}
+              />
             </section>
-          </>
+            <WeatherCharts forecast={forecast} day={day} />
+          </section>
         )}
       </Layout>
     )

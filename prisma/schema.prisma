@@ -2,8 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -11,8 +11,29 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Location {
+  id        String @id @default(cuid())
+  name      String @db.VarChar(255)
+  admin1    String @db.VarChar(255)
+  admin2    String @db.VarChar(255)
+  admin3    String @db.VarChar(255)
+  latitude  Float
+  longitude Float
+  elevation Float
+  country   String @db.VarChar(255)
+
+  @@index([name])
+}
+
+model User {
+  userId          String @id @default(cuid())
+  defaultLocation String
+}
+
+model UserLocations {
+  userId     String
+  locationId String
+
+  @@unique([userId, locationId])
+  @@index([userId, locationId])
 }

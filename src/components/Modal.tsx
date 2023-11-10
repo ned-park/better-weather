@@ -1,6 +1,7 @@
 import * as uniqId from 'uniqid';
 import type { MouseEvent } from 'react';
-import type { LatLong, Place } from '~/pages/weather';
+import type { LatLong } from '~/interfaces/latlong';
+import type { Place } from '~/interfaces/place';
 
 function Modal({
   places,
@@ -8,12 +9,16 @@ function Modal({
   setShowModal,
   setLocation,
   setQuery,
+  setPlaces,
+  setIsLoading,
 }: {
   places: Place[],
   setLatLong: React.Dispatch<React.SetStateAction<LatLong>>,
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>,
-  setLocation: React.Dispatch<React.SetStateAction<string>>,
+  setLocation: React.Dispatch<React.SetStateAction<{name: string, id: string}>>,
   setQuery: React.Dispatch<React.SetStateAction<string>>,
+  setPlaces: React.Dispatch<React.SetStateAction<Place[]>>,
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
 }) {
 
   const handleSelection = (e: MouseEvent, place: Place) => {
@@ -23,10 +28,13 @@ function Modal({
       latitude: String(place.latitude),
       longitude: String(place.longitude),
     });
-    setLocation(place.name);
+    setLocation({name: place.name, id: place.id});
     setQuery("");
     setShowModal(false);
+    setPlaces([]);
   }
+
+   setIsLoading(false);
   return (
     <section className="bg-sky-100 bg-opacity-80 min-w-full min-h-screen flex justify-center items-center z-10">
       <div className="bg-sky-50 bg-opacity-100 shadow-lg p-2 md:p-16 h-200 z-50">
@@ -37,7 +45,7 @@ function Modal({
               onClick={(e) => handleSelection(e, place)}
               className="cursor-pointer border-b-2 grey"
             >
-              {[place.name, place.admin1, place.country].filter((p: string) => p && p.length > 0).join(", ")}
+              {[place.name, place.admin1, place.country].filter((p: string | undefined) => p && p.length > 0).join(", ")}
             </li>))}
         </ul>
       </div>
