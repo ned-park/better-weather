@@ -130,31 +130,25 @@ function Weather() {
   if (data) {
     setPlaces(data);
     setPlaceQuery('');
+    setShowModal(true);
   }
 
 
 
   const changeLocation = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // setIsLoading(true);
+    setIsLoading(true);
     try {
       if (!query || query.length == 0) throw new Error("Expected query to have a value initial");
       const places = query.split(',');
       if (!places[0]) throw new Error("Expected query to have a value");
       setPlaceQuery(places[0]);
-      setShowModal(true);
       return data;
     } catch (err) {
       toast.error("Expected query to have a value");
       setIsLoading(false);
     }
 
-  }
-
-  if (isLoading) {
-    return (
-      <LoadingSpinner />
-    )
   }
 
   if (showModal && places && places.length > 0) {
@@ -170,38 +164,45 @@ function Weather() {
       />
     )
   }
-
   else {
     return (
       <Layout>
-        <section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
-          <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>
-            <input
-              onChange={(e) => setQuery(e.target.value)}
-              value={query}
-              placeholder="City name"
-              className="border-2 border-grey rounded p-2"
-            />
-            <button className="bg-sky-500 rounded p-2  px-4">
-              Submit
-            </button>
-          </form>
-          {!isLoading && forecast && (
-            <div className="pb-4">
-              <label htmlFor="day">Select date:
-                <select
-                  name="day"
-                  id="day"
-                  value={day}
-                  onChange={e => setDay(Number(e.target.value))}
-                  className="ml-4 p-2 rounded"
-                >
-                  {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
-                </select>
-              </label>
-            </div>
+        {!isLoading &&
+
+          (<section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
+            <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>
+              <input
+                onChange={(e) => setQuery(e.target.value)}
+                value={query}
+                placeholder="City name"
+                className="border-2 border-grey rounded p-2"
+              />
+              <button className="bg-sky-500 rounded p-2  px-4">
+                Submit
+              </button>
+            </form>
+            {!isLoading && forecast && (
+              <div className="pb-4">
+                <label htmlFor="day">Select date:
+                  <select
+                    name="day"
+                    id="day"
+                    value={day}
+                    onChange={e => setDay(Number(e.target.value))}
+                    className="ml-4 p-2 rounded"
+                  >
+                    {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
+                  </select>
+                </label>
+              </div>
+            )}
+          </section>
           )}
-        </section>
+        {isLoading &&
+          <div className="h-full">
+            <LoadingSpinner />
+          </div>}
+
 
         {!isLoading && forecast && (
           <>

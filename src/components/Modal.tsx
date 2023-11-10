@@ -24,7 +24,6 @@ function Modal({
   const handleSelection = (e: MouseEvent, place: Place) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsLoading(false);
     setLatLong({
       latitude: String(place.latitude),
       longitude: String(place.longitude),
@@ -34,6 +33,8 @@ function Modal({
     setShowModal(false);
     setPlaces([]);
   }
+
+   setIsLoading(false);
   return (
     <section className="bg-sky-100 bg-opacity-80 min-w-full min-h-screen flex justify-center items-center z-10">
       <div className="bg-sky-50 bg-opacity-100 shadow-lg p-2 md:p-16 h-200 z-50">
