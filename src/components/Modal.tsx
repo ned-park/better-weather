@@ -15,7 +15,7 @@ function Modal({
   places: Place[],
   setLatLong: React.Dispatch<React.SetStateAction<LatLong>>,
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>,
-  setLocation: React.Dispatch<React.SetStateAction<string>>,
+  setLocation: React.Dispatch<React.SetStateAction<{name: string, id: string}>>,
   setQuery: React.Dispatch<React.SetStateAction<string>>,
   setPlaces: React.Dispatch<React.SetStateAction<Place[]>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -28,7 +28,7 @@ function Modal({
       latitude: String(place.latitude),
       longitude: String(place.longitude),
     });
-    setLocation(place.name);
+    setLocation({name: place.name, id: place.id});
     setQuery("");
     setShowModal(false);
     setPlaces([]);

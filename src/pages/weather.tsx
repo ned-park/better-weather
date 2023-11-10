@@ -28,14 +28,14 @@ function Weather() {
   const [day, setDay] = useState(0);
   const [placeQuery, setPlaceQuery] = useState('');
 
-  const setDefaultLocation = (event: Event) => {
-    event.preventDefault();
-    if (!places) return;
+  // const setDefaultLocation = (event: Event) => {
+  //   event.preventDefault();
+  //   if (!places) return;
 
-    api.userLocation.setDefaultLocation.useMutation({
-      locationId: location.id
-    })
-  }
+  //   api.userLocation.setDefaultLocation.useMutation({
+  //     locationId: location.id
+  //   })
+  // }
 
   useEffect(() => {
     const getForecastData = async () => {
@@ -79,17 +79,64 @@ function Weather() {
 
   const tableData = getTableData();
 
-  const { data } = api.location.getPlacesByName.useQuery({ name: placeQuery }, {
+  const { data: placesData } = api.location.getPlacesByName.useQuery({ name: placeQuery }, {
     enabled: placeQuery.length > 0
   });
 
-  if (data) {
-    setPlaces(data);
+  // const { data: defaultLocation } = api.userLocation.getDefaultLocation.useQuery(void, {
+    // enabled: false // (!!user && !location)
+  // });
+
+  useEffect(() => {
+    const getDefaultLocation = async () => {
+
+      interface DefaultLocationResponse {
+        result: Result;
+      }
+
+      interface Result {
+        data: Data;
+      }
+
+      interface Data {
+        json: Json;
+      }
+
+      interface Json {
+        id: string;
+        name: string;
+        admin1: string;
+        admin2: string;
+        admin3: string;
+        latitude: number;
+        longitude: number;
+        elevation: number;
+        country: string;
+      }
+      
+      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation?batch=1&input={"0":{"json":{"userId":"${user!.id}"}}}`);
+
+      if (res && res.ok) {
+        const data = await res.json() as [DefaultLocationResponse];
+        if (data !== null && data.length > 0) {
+          const place = data[0].result.data.json as Place;
+          setLocation({name: place.name, id: place.id});
+          setLatLong({latitude: `${place.latitude}`, longitude: `${place.longitude}`});
+        }
+
+      }
+    }
+
+    if (user) {
+      void getDefaultLocation();
+    }
+  }, [user]);
+
+  if (placesData) {
+    setPlaces(placesData);
     setPlaceQuery('');
     setShowModal(true);
   }
-
-
 
   const changeLocation = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,7 +146,7 @@ function Weather() {
       const places = query.split(',');
       if (!places[0]) throw new Error("Expected query to have a value");
       setPlaceQuery(places[0]);
-      return data;
+      return placesData;
     } catch (err) {
       toast.error("Expected query to have a value");
       setIsLoading(false);
