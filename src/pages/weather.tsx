@@ -28,14 +28,13 @@ function Weather() {
   const [day, setDay] = useState(0);
   const [placeQuery, setPlaceQuery] = useState('');
 
-  // const setDefaultLocation = (event: Event) => {
-  //   event.preventDefault();
-  //   if (!places) return;
+  const setDefaultLocation = (event: Event) => {
+    event.preventDefault();
+    if (!places) return;
 
-  //   api.userLocation.setDefaultLocation.useMutation({
-  //     locationId: location.id
-  //   })
-  // }
+    const { mutate } = api.userLocation.setDefaultLocation.useMutation();
+    mutate({ locationId: location.id });
+  }
 
   useEffect(() => {
     const getForecastData = async () => {
@@ -84,7 +83,7 @@ function Weather() {
   });
 
   // const { data: defaultLocation } = api.userLocation.getDefaultLocation.useQuery(void, {
-    // enabled: false // (!!user && !location)
+  // enabled: false // (!!user && !location)
   // });
 
   useEffect(() => {
@@ -113,15 +112,15 @@ function Weather() {
         elevation: number;
         country: string;
       }
-      
-      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation?batch=1&input={"0":{"json":{"userId":"${user!.id}"}}}`);
+
+      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation`);
 
       if (res && res.ok) {
-        const data = await res.json() as [DefaultLocationResponse];
-        if (data !== null && data.length > 0) {
-          const place = data[0].result.data.json as Place;
-          setLocation({name: place.name, id: place.id});
-          setLatLong({latitude: `${place.latitude}`, longitude: `${place.longitude}`});
+        const data = await res.json() as DefaultLocationResponse;
+        if (data !== null) {
+          const place = data.result.data.json as Place;
+          setLocation({ name: place.name, id: place.id });
+          setLatLong({ latitude: `${place.latitude}`, longitude: `${place.longitude}` });
         }
 
       }
@@ -169,7 +168,7 @@ function Weather() {
   else {
     return (
       <Layout>
-        {!isLoading && !showModal && 
+        {!isLoading && !showModal &&
 
           (<section className="flex flex-col md:flex-row gap-4 justify-between items-center px-1 py-4">
             <form className="flex flex-col md:flex-row gap-4" onSubmit={(e) => { void changeLocation(e) }}>

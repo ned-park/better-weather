@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, privateProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, privateProcedure } from "../trpc";
 
 
 export const userLocationRouter = createTRPCRouter({
@@ -8,7 +8,7 @@ export const userLocationRouter = createTRPCRouter({
       locationId: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.currentUser.id;
+      const userId = ctx.currentUserId;
 
       try {
         const exists = await ctx.prisma.userLocations.findFirstOrThrow({
@@ -34,7 +34,7 @@ export const userLocationRouter = createTRPCRouter({
       locationId: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.currentUser.id;
+      const userId = ctx.currentUserId;
 
       try {
         const exists = await ctx.prisma.userLocations.delete({
@@ -58,14 +58,9 @@ export const userLocationRouter = createTRPCRouter({
     }),
 
 
-  getDefaultLocation: publicProcedure
-    .input(
-      z.object({
-        userId: z.string()
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const userId = input.userId;
+  getDefaultLocation: privateProcedure
+    .query(async ({ ctx }) => {
+      const userId = ctx.currentUserId;
 
       try {
         const defaultLocation = await ctx.prisma.user.findFirstOrThrow({
@@ -91,7 +86,7 @@ export const userLocationRouter = createTRPCRouter({
       locationId: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.currentUser.id;
+      const userId = ctx.currentUserId;
 
       const exists = await ctx.prisma.user.upsert({
         create: {
@@ -111,7 +106,7 @@ export const userLocationRouter = createTRPCRouter({
 
   deleteDefaultLocation: privateProcedure
     .mutation(async ({ ctx }) => {
-      const userId = ctx.currentUser.id;
+      const userId = ctx.currentUserId;
 
       const exists = await ctx.prisma.user.delete({
         where: {

@@ -1,10 +1,7 @@
 import { z } from "zod";
 
-
 import { createTRPCRouter, privateProcedure, publicProcedure } from "../trpc";
-// import type { Place } from "~/interfaces/place";
 import type { Location } from "~/interfaces/location";
-import type { User } from "@clerk/nextjs/dist/types/server";
 import type { PrismaClient, Prisma } from "@prisma/client";
 import type { DefaultArgs } from "@prisma/client/runtime";
 
@@ -20,7 +17,7 @@ type placeType = {
   country: string,
 }
 
-const addLocations = async (ctx: { prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined, DefaultArgs>; currentUser: User | null | undefined; }, places: placeType[]) => {
+const addLocations = async (ctx: { prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined, DefaultArgs>; currentUserId: string | null; }, places: placeType[]) => {
   void await ctx.prisma.location.createMany({data: places, skipDuplicates: true});
   return;
 }
@@ -66,16 +63,15 @@ export const locationRouter = createTRPCRouter({
     return ctx.prisma.location.findMany();
   }),
 
-  addUserLocation: privateProcedure
+    defaultLocation: privateProcedure
     .input(z.object({
       locationId: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.currentUser.id;
 
       const place = await ctx.prisma.userLocations.create({
         data: {
-          userId,
+          userId: ctx.currentUserId,
           locationId: input.locationId,
         }
       })
