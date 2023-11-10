@@ -15,6 +15,31 @@ import type { Forecast } from "~/interfaces/forecast";
 import type { LatLong } from "~/interfaces/latlong";
 import type { Place } from "~/interfaces/place";
 
+const SetDefaultLocation = ({ location }: { location: { name: string, id: string } }) => {
+  const { mutate } = api.userLocation.setDefaultLocation.useMutation({
+    onSuccess: () => {
+      toast.success(`Default Location is now ${location.name}`);
+    },
+    onError: (e) => {
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage && errorMessage[0]) {
+        toast.error(errorMessage[0]);
+      } else {
+        toast.error("Failed to change default location! Please try again later.");
+      }
+    },
+  });
+
+  return (
+    <button
+      className="bg-sky-500 rounded p-2  px-4"
+      onClick={() => mutate({ locationId: location.id })}
+    >
+      Make Default
+    </button>
+  )
+}
+
 function Weather() {
   const { user } = useUser();
 
@@ -28,13 +53,43 @@ function Weather() {
   const [day, setDay] = useState(0);
   const [placeQuery, setPlaceQuery] = useState('');
 
-  const setDefaultLocation = (event: Event) => {
-    event.preventDefault();
-    if (!places) return;
+  useEffect(() => {
+    const getDefaultLocation = async () => {
 
-    const { mutate } = api.userLocation.setDefaultLocation.useMutation();
-    mutate({ locationId: location.id });
-  }
+      interface DefaultLocationResponse {
+        result: {
+          data: {
+            json: {
+              id: string;
+              name: string;
+              admin1: string;
+              admin2: string;
+              admin3: string;
+              latitude: number;
+              longitude: number;
+              elevation: number;
+              country: string;
+            }
+          }
+        };
+      }
+
+      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation`);
+
+      if (res.ok) {
+        const data = await res.json() as DefaultLocationResponse;
+        if (data !== null) {
+          const place = data.result.data.json as Place;
+          setLocation({ name: place.name, id: place.id });
+          setLatLong({ latitude: `${place.latitude}`, longitude: `${place.longitude}` });
+        }
+      }
+    }
+
+    if (user) {
+      void getDefaultLocation();
+    }
+  }, [user]);
 
   useEffect(() => {
     const getForecastData = async () => {
@@ -51,7 +106,6 @@ function Weather() {
       setIsLoading(true);
       void await getForecastData();
       setIsLoading(false);
-
     }
 
     if (latLong.latitude.length > 0 && latLong.longitude.length > 0) {
@@ -81,55 +135,6 @@ function Weather() {
   const { data: placesData } = api.location.getPlacesByName.useQuery({ name: placeQuery }, {
     enabled: placeQuery.length > 0
   });
-
-  // const { data: defaultLocation } = api.userLocation.getDefaultLocation.useQuery(void, {
-  // enabled: false // (!!user && !location)
-  // });
-
-  useEffect(() => {
-    const getDefaultLocation = async () => {
-
-      interface DefaultLocationResponse {
-        result: Result;
-      }
-
-      interface Result {
-        data: Data;
-      }
-
-      interface Data {
-        json: Json;
-      }
-
-      interface Json {
-        id: string;
-        name: string;
-        admin1: string;
-        admin2: string;
-        admin3: string;
-        latitude: number;
-        longitude: number;
-        elevation: number;
-        country: string;
-      }
-
-      const res = await fetch(`/api/trpc/userLocation.getDefaultLocation`);
-
-      if (res && res.ok) {
-        const data = await res.json() as DefaultLocationResponse;
-        if (data !== null) {
-          const place = data.result.data.json as Place;
-          setLocation({ name: place.name, id: place.id });
-          setLatLong({ latitude: `${place.latitude}`, longitude: `${place.longitude}` });
-        }
-
-      }
-    }
-
-    if (user) {
-      void getDefaultLocation();
-    }
-  }, [user]);
 
   if (placesData) {
     setPlaces(placesData);
@@ -183,7 +188,7 @@ function Weather() {
               </button>
             </form>
             {!isLoading && forecast && (
-              <div className="pb-4">
+              <div className="pb-4 flex gap-2">
                 <label htmlFor="day">Select date:
                   <select
                     name="day"
@@ -195,29 +200,29 @@ function Weather() {
                     {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
                   </select>
                 </label>
+                <SetDefaultLocation location={location} />
               </div>
             )}
           </section>
-          )}
+          )
+        }
         {isLoading &&
           <div className="h-full">
             <LoadingSpinner />
-          </div>}
-
+          </div>
+        }
         {!isLoading && forecast && (
-          <>
-            <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
-              <section>
-                <WeatherTable
-                  tableData={tableData}
-                  tableHeaders={Object.keys(forecast.hourly)}
-                  tableUnits={Object.values(forecast.hourly_units)}
-                  location={location.name}
-                />
-              </section>
-              <WeatherCharts forecast={forecast} day={day} />
+          <section className="w-full grid xl:grid-cols-2 gap-4 mb-8">
+            <section>
+              <WeatherTable
+                tableData={tableData}
+                tableHeaders={Object.keys(forecast.hourly)}
+                tableUnits={Object.values(forecast.hourly_units)}
+                location={location.name}
+              />
             </section>
-          </>
+            <WeatherCharts forecast={forecast} day={day} />
+          </section>
         )}
       </Layout>
     )
