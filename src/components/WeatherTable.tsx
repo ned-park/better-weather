@@ -45,9 +45,10 @@ function WeatherTable({
       </thead>
       <tbody className="pl-4">
         {tableData?.map((row) => {
+          if (!row[0]) throw new Error("Something went wrong");
           return (
             <tr
-              className="border-b-2 border-grey"
+              className={`border-b-2 border-grey ${new Date(row[0]) < new Date() ? 'bg-slate-100' : ''}`}
               key={uniqId.default()}
             >
               {row.map((value, i) =>
