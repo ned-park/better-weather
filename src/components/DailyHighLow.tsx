@@ -1,26 +1,42 @@
 import type { Forecast } from "~/interfaces/forecast";
 
 export default function DailyHighLow(
-  { forecast }:
-    { forecast: Forecast}
-  ) {
+  { forecast,
+    setDay
+  }: {
+    forecast: Forecast,
+    setDay: React.Dispatch<React.SetStateAction<number>>,
+  }
+) {
 
-  const maxTemps = [];
-  const minTemps:number[] = [];
-  const days: (string|undefined)[] = [];
+  const maxTemps: number[] = [];
+  const minTemps: number[] = [];
+  const days: string[] = [];
+  const precipitation: string[] = [];
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day < forecast.hourly.time.length / 24; day++) {
     maxTemps.push(Math.max(...forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1))));
     minTemps.push(Math.min(...forecast.hourly.temperature_2m.slice(24 * day, 24 * (day + 1))));
-    if (!forecast || !forecast.hourly || !forecast.hourly.time || !forecast.hourly.time[24 * day]) throw new Error("Unexpected date value");
-    days.push(new Date(forecast.hourly.time[24 * day]!).toString().split(' ')[0]);
+    precipitation.push(forecast.hourly.precipitation.slice(24 * day, 24 * (day + 1)).reduce((sum, mm) => sum + mm, 0).toFixed(1));
+
+    if (forecast && forecast.hourly && forecast.hourly.time && 24 * day <= forecast.hourly.time.length && forecast.hourly.time[24 * day]) {
+      const forecastDate = new Date(`${forecast.hourly.time[24 * day] ?? ""}`).toString()
+      const dayOfWeek = forecastDate.split(' ')[0];
+      if (!dayOfWeek) throw new Error("Invalid forecast data");
+      days.push(dayOfWeek);
+    }
   }
 
-  console.log(maxTemps);
-
   return (
-    <ol>
-      {maxTemps.map((max, i)=> <li key={days[i]}>{max}, {minTemps[i]}, {days[i]}</li>)}
+    <ol className="flex flex-wrap justify-center w-full text-xs md:text-sm gap-1: md:gap-4 pb-5">
+      {maxTemps.map((max, i: number) => <li key={days[i]}>
+        <ul className="cursor-pointer border-grey border-2 py-2 px-4 rounded" onClick={() => void setDay(i)}>
+          <li className="w-full text-center font-bold">{days[i]}</li>
+          <li>L: {minTemps[i]}{forecast.hourly_units.temperature_2m}</li>
+          <li>H: {maxTemps[i]}{forecast.hourly_units.temperature_2m}</li>
+          <li>P: {precipitation[i]}{forecast.hourly_units.precipitation}</li>
+        </ul>
+      </li>)}
     </ol>
   )
 }

@@ -14,6 +14,7 @@ import { useUser } from "@clerk/nextjs";
 import type { Forecast } from "~/interfaces/forecast";
 import type { LatLong } from "~/interfaces/latlong";
 import type { Place } from "~/interfaces/place";
+import DailyHighLow from "~/components/DailyHighLow";
 
 const SetDefaultLocation = ({ location }: { location: { name: string, id: string } }) => {
   const { mutate } = api.userLocation.setDefaultLocation.useMutation({
@@ -203,9 +204,12 @@ function Weather() {
                 <SetDefaultLocation location={location} />
               </div>
             )}
+          </section>)}
+        {!isLoading && !showModal && forecast && (
+          <section className="w-full flex justify-center items-center gap-4">
+            <DailyHighLow forecast={forecast} setDay={setDay} />
           </section>
-          )
-        }
+        )}
         {isLoading &&
           <div className="h-full">
             <LoadingSpinner />
