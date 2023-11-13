@@ -28,13 +28,13 @@ export default function DailyHighLow(
   }
 
   return (
-    <ol className="flex flex-wrap justify-center w-full text-xs md:text-sm gap-1: md:gap-4 pb-5">
+    <ol className="flex flex-wrap justify-center w-full text-xs md:text-sm gap-1: md:gap-4 pb-5 font-mono">
       {maxTemps.map((max, i: number) => <li key={days[i]}>
         <ul className="cursor-pointer border-grey border-2 py-2 px-4 rounded" onClick={() => void setDay(i)}>
           <li className="w-full text-center font-bold">{days[i]}</li>
-          <li>L: {minTemps[i]}{forecast.hourly_units.temperature_2m}</li>
-          <li>H: {maxTemps[i]}{forecast.hourly_units.temperature_2m}</li>
-          <li>P: {precipitation[i]}{forecast.hourly_units.precipitation}</li>
+          <li>L:{minTemps[i]?.toFixed(1)}{forecast.hourly_units.temperature_2m}</li>
+          <li>H:{maxTemps[i]?.toFixed(1)}{forecast.hourly_units.temperature_2m}</li>
+          <li>P:{precipitation[i]}{forecast.hourly_units.precipitation}</li>
         </ul>
       </li>)}
     </ol>
