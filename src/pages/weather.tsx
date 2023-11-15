@@ -201,7 +201,7 @@ function Weather() {
                     {new Array(7).fill(0).map((_, i) => <option key={uniqId.default()} value={i}>{String(forecast.hourly.time[24 * i]).split("T")[0]}</option>)}
                   </select>
                 </label>
-                <SetDefaultLocation location={location} />
+                {user && <SetDefaultLocation location={location} />}
               </div>
             )}
           </section>)}
