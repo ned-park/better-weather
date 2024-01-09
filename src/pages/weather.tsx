@@ -94,7 +94,7 @@ function Weather() {
 
   useEffect(() => {
     const getForecastData = async () => {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=weathercode,temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,windspeed_10m`);
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latLong.latitude}&longitude=${latLong.longitude}&timezone=auto&hourly=weathercode,temperature_2m,relativehumidity_2m,precipitation_probability,precipitation,windspeed_10m,surface_pressure`);
       if (res.ok) {
         const data: Forecast = await res.json() as Forecast;
         if (!data) return;

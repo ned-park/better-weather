@@ -6,6 +6,7 @@ interface Hourly {
   weathercode: Array<number>;
   relativehumidity_2m: Array<number>;
   windspeed_10m: Array<number>;
+  "surface_pressure": Array<number>;
 }
 
 interface HourlyUnits {
@@ -16,6 +17,7 @@ interface HourlyUnits {
   "precipitation": string;
   "weathercode": string;
   "windspeed_10m": string;
+  "surface_pressure": string;
 }
 
 export interface ForecastData {
@@ -32,7 +34,7 @@ export interface Forecast {
   hourly: Hourly;
   hourly_units: HourlyUnits;
   temperature_2m?: string;
-  time?: string;
+  time: string;
   latitude: number;
   longitude: number;
   timezone: string;
