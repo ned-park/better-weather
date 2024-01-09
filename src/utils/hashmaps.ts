@@ -34,5 +34,6 @@ humanReadable.set("temperature_2m", "T");
 humanReadable.set("relativehumidity_2m", "RH");
 humanReadable.set("precipitation_probability", "PoP");
 humanReadable.set("precipitation", "H20");
+humanReadable.set("surface_pressure", "P");
 humanReadable.set("weathercode", "Type");
 humanReadable.set("windspeed_10m", "Wind");
