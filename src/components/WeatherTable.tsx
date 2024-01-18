@@ -19,6 +19,18 @@ function WeatherTable({
   location: string
 }) {
 
+  function formatData(value: number|string, idx:number): string {
+    switch(idx) {
+      case 0: 
+        return String(value).split("T")[1] ?? `${value}`;
+      case 2: // temperature 
+      case 5: // h20 mm
+      case 6: // wind
+        return typeof value == "number"? value.toFixed(1): value
+      default: return `${value}`
+    }
+  }
+
   return (
     <table
       className="w-full table-auto text-center text-tableclamp border-2 border-b-0 border-grey"
@@ -56,9 +68,7 @@ function WeatherTable({
                   key={uniqId.default()}
                   className={`first-of-type:px-1 px-1 ${i===1? emoji.className: "" }`}
                 >
-                  {i === 0 ? 
-                  String(value).split("T")[1] 
-                  : value}
+                  {formatData(value, i)}
                 </td>)}
             </tr>
           )
