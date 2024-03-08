@@ -1,0 +1,4 @@
+Figure out weather table rounding: try border-separate or border-spacing
+Intelligent caching to reduce API calls
+Optimize SQL queries
+Make GeoIP default for users not signed in, or without a default location
