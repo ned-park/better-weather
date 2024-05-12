@@ -43,3 +43,5 @@ yarn-error.log*
 
 src/data
 src/data/*
+
+deploy.tar
