@@ -5,10 +5,10 @@ import Link from "next/link";
 function LandingPage() {
   return (
     <main className="min-h-screen flex flex-col gap-8 mt-16">
-      <h1 className="text-6xl">{process.env.NEXT_PUBLIC_TITLE}</h1>
+      <h1 className="text-6xl">Weekly Weather</h1>
       <section className="flex flex-col xl:flex-row gap-4">
         <section className="flex flex-col justify-center gap-8">
-          <h2 className="font-bold text-xl">{process.env.NEXT_PUBLIC_TITLE} offers </h2>
+          <h2 className="font-bold text-xl">Weekly Weather offers </h2>
           <ul className="flex flex-col gap-2">
             <li>Weekly Weather Forecasts</li>
             <li>Customizable saved locations</li>

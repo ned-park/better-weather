@@ -13,12 +13,13 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
     <Head>
-      <title>{process.env.NEXT_PUBLIC_TITLE}</title>
+      <title>Weekly Weather</title>
       <meta name="description" content="Weather forecast aggregator, includes wet bulb temperatures, and moon phase" />
       <link rel="icon" href="/favicon.ico" />
     </Head>
     <ClerkProvider 
       navigate={(to) => router.push(to)}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       >
       <Toaster position="top-right" />
       <Component {...pageProps} />
