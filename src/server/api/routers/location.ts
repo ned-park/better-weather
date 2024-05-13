@@ -2,8 +2,7 @@ import { z } from "zod";
 
 import { createTRPCRouter, privateProcedure, publicProcedure } from "../trpc";
 import type { Location } from "~/interfaces/location";
-import type { PrismaClient, Prisma } from "@prisma/client";
-import type { DefaultArgs } from "@prisma/client/runtime";
+import type { PrismaClient } from "@prisma/client";
 
 type placeType = {
   id: string,
@@ -17,7 +16,7 @@ type placeType = {
   country: string,
 }
 
-const addLocations = async (ctx: { prisma: PrismaClient<Prisma.PrismaClientOptions, never, Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined, DefaultArgs>; currentUserId: string | null; }, places: placeType[]) => {
+const addLocations = async (ctx: { prisma: PrismaClient; currentUserId: string | null; }, places: placeType[]) => {
   void await ctx.prisma.location.createMany({data: places, skipDuplicates: true});
   return;
 }
